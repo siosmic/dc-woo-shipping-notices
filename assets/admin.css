@@ -1,0 +1,106 @@
+/**
+ * DC Woo Shipping Notices — admin styles.
+ * Minimal, WooCommerce-settings-friendly.
+ */
+
+/* ------------------------------------------------------------------ */
+/*  Rules table                                                        */
+/* ------------------------------------------------------------------ */
+.dcsn-rules-table {
+	margin-top: 12px;
+	border-collapse: collapse;
+}
+
+.dcsn-rules-table th {
+	text-align: left;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 10px 12px;
+}
+
+.dcsn-rules-table td {
+	padding: 10px 12px;
+	font-size: 13px;
+	vertical-align: middle;
+}
+
+.dcsn-rules-table tbody tr:hover {
+	background: #f7f8fa;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Enabled dot                                                        */
+/* ------------------------------------------------------------------ */
+.dcsn-dot {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+}
+
+.dcsn-enabled {
+	background: #16a34a;
+}
+
+.dcsn-disabled {
+	background: #cbd5e1;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Mode badges                                                        */
+/* ------------------------------------------------------------------ */
+.dcsn-mode {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 100px;
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.dcsn-mode-allow {
+	background: #ecfdf5;
+	color: #065f46;
+}
+
+.dcsn-mode-block {
+	background: #fef2f2;
+	color: #991b1b;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Actions column                                                     */
+/* ------------------------------------------------------------------ */
+.dcsn-actions {
+	white-space: nowrap;
+}
+
+.dcsn-actions a {
+	margin-right: 8px;
+	text-decoration: none;
+}
+
+.dcsn-actions .dcsn-delete {
+	color: #b91c1c;
+}
+
+.dcsn-actions .dcsn-delete:hover {
+	color: #dc2626;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Form                                                               */
+/* ------------------------------------------------------------------ */
+.dcsn-form .form-table th {
+	width: 180px;
+	padding-top: 16px;
+}
+
+.dcsn-form .form-table td {
+	padding-top: 12px;
+	padding-bottom: 12px;
+}
+
+.dcsn-form textarea {
+	font-family: inherit;
+}
