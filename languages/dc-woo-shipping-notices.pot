@@ -1,15 +1,15 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Unprinted
-# This file is distributed under the same license as the DC Woo Shipping Notices package.
+# Copyright (C) YEAR David Corradini – Unprinted Sàrl
+# This file is distributed under the same license as the Shipping Destination Notices for WooCommerce package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: DC Woo Shipping Notices 1.2.0\n"
+"Project-Id-Version: Shipping Destination Notices for WooCommerce 1.0.0\n"
 "Report-Msgid-Bugs-To: https://github.com/unprintedch/dc-woo-shipping-notices/"
 "issues\n"
-"POT-Creation-Date: 2026-02-17 09:49+0100\n"
+"POT-Creation-Date: 2026-02-17 10:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: dc-woo-shipping-notices.php:144
+#: dc-woo-shipping-notices.php:145
 msgid ""
 "DC Woo Shipping Notices requires WooCommerce to be installed and active."
 msgstr ""
@@ -54,139 +54,139 @@ msgid ""
 "Show a modal dialog when the customer selects a destination matching a rule."
 msgstr ""
 
-#: includes/class-dcsn-admin.php:159
+#: includes/class-dcsn-admin.php:159 includes/class-dcsn-admin.php:189
 msgid "Security check failed."
 msgstr ""
 
-#: includes/class-dcsn-admin.php:235
+#: includes/class-dcsn-admin.php:238
 msgid "Rules"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:238
+#: includes/class-dcsn-admin.php:241
 msgid "Add rule"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:242
+#: includes/class-dcsn-admin.php:245
 msgid "No rules yet."
 msgstr ""
 
-#: includes/class-dcsn-admin.php:247 includes/class-dcsn-admin.php:350
+#: includes/class-dcsn-admin.php:250 includes/class-dcsn-admin.php:354
 msgid "Enabled"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:248 includes/class-dcsn-admin.php:361
+#: includes/class-dcsn-admin.php:251 includes/class-dcsn-admin.php:365
 msgid "Label"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:249 includes/class-dcsn-admin.php:367
+#: includes/class-dcsn-admin.php:252 includes/class-dcsn-admin.php:371
 msgid "Countries"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:250 includes/class-dcsn-admin.php:382
+#: includes/class-dcsn-admin.php:253 includes/class-dcsn-admin.php:386
 msgid "US States"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:251 includes/class-dcsn-admin.php:391
+#: includes/class-dcsn-admin.php:254 includes/class-dcsn-admin.php:395
 msgid "Mode"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:252 includes/class-dcsn-admin.php:457
+#: includes/class-dcsn-admin.php:255 includes/class-dcsn-admin.php:461
 msgid "Priority"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:253
+#: includes/class-dcsn-admin.php:256
 msgid "Actions"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:273
+#: includes/class-dcsn-admin.php:276
 msgid "Edit"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:274
+#: includes/class-dcsn-admin.php:277
 msgid "Duplicate"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:275
+#: includes/class-dcsn-admin.php:278
 msgid "Delete this rule?"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:275
+#: includes/class-dcsn-admin.php:278
 msgid "Delete"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:323
+#: includes/class-dcsn-admin.php:326
 msgid "Edit Rule"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:324
+#: includes/class-dcsn-admin.php:327
 msgid "Add Rule"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:339
+#: includes/class-dcsn-admin.php:342
 msgid "Back to list"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:354
+#: includes/class-dcsn-admin.php:358
 msgid "Active"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:362
+#: includes/class-dcsn-admin.php:366
 msgid "Internal label…"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:376
+#: includes/class-dcsn-admin.php:380
 msgid "Hold Ctrl/Cmd to select multiple."
 msgstr ""
 
-#: includes/class-dcsn-admin.php:384
+#: includes/class-dcsn-admin.php:388
 msgid "CA, NY, TX… (empty = all US states)"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:385
+#: includes/class-dcsn-admin.php:389
 msgid "Comma-separated state codes. Leave empty to match all US states."
 msgstr ""
 
-#: includes/class-dcsn-admin.php:405
+#: includes/class-dcsn-admin.php:409
 msgid "Notice type"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:430 includes/class-dcsn-admin.php:447
+#: includes/class-dcsn-admin.php:434 includes/class-dcsn-admin.php:451
 msgid "Message"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:440 includes/class-dcsn-admin.php:450
+#: includes/class-dcsn-admin.php:444 includes/class-dcsn-admin.php:454
 msgid "Basic HTML allowed (links, bold, italic)."
 msgstr ""
 
-#: includes/class-dcsn-admin.php:460
+#: includes/class-dcsn-admin.php:464
 msgid "Lower runs first."
 msgstr ""
 
-#: includes/class-dcsn-admin.php:466
+#: includes/class-dcsn-admin.php:470
 msgid "Stop after match"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:470
+#: includes/class-dcsn-admin.php:474
 msgid "Do not evaluate further rules if this one matches."
 msgstr ""
 
-#: includes/class-dcsn-admin.php:477
+#: includes/class-dcsn-admin.php:481
 msgid "Save rule"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:478
+#: includes/class-dcsn-admin.php:482
 msgid "Cancel"
 msgstr ""
 
-#: includes/class-dcsn-admin.php:520
+#: includes/class-dcsn-admin.php:524
 msgid "Rule saved."
 msgstr ""
 
-#: includes/class-dcsn-admin.php:521
+#: includes/class-dcsn-admin.php:525
 msgid "Rule deleted."
 msgstr ""
 
-#: includes/class-dcsn-admin.php:522
+#: includes/class-dcsn-admin.php:526
 msgid "Rule duplicated."
 msgstr ""
 

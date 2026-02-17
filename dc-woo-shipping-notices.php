@@ -1,15 +1,16 @@
 <?php
 /**
- * Plugin Name: DC Woo Shipping Notices
- * Plugin URI:  https://github.com/unprintedch/dc-woo-shipping-notices
- * Description: Checkout notices based on shipping destination — warn or block orders by country/state.
- * Version:     1.2.0
+ * Plugin Name: Shipping Destination Notices for WooCommerce
+ * Plugin URI:  https://unprinted.ch/plugins/woo-shipping-notices
+ * Description: Show custom messages or disable shipping based on destination country/state in WooCommerce checkout.
+ * Version:     1.0.0
  * Author:      Unprinted
  * Author URI:  https://unprinted.ch
  * Text Domain: dc-woo-shipping-notices
  * Domain Path: /languages
- * Requires PHP: 8.2
- * Requires at least: 6.6
+ * Requires PHP: 7.4
+ * Requires at least: 6.0
+ * Tested up to: 6.6
  * WC requires at least: 8.0
  * WC tested up to: 9.6
  * License:     GPLv2 or later
@@ -27,7 +28,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
-define( 'DCSN_VERSION', '1.2.0' );
+define( 'DCSN_VERSION', '1.0.0' );
 define( 'DCSN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DCSN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'DCSN_OPTION_KEY', 'dcsn_rules' );

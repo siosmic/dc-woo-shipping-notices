@@ -24,7 +24,7 @@ function dcsn_generate_id(): string {
  * @param mixed $input Array or string.
  * @return string[]
  */
-function dcsn_sanitize_countries( mixed $input ): array {
+function dcsn_sanitize_countries( $input ): array {
 	if ( is_string( $input ) ) {
 		$input = explode( ',', $input );
 	}
@@ -42,7 +42,7 @@ function dcsn_sanitize_countries( mixed $input ): array {
  * @param mixed $input String or array.
  * @return string[]
  */
-function dcsn_sanitize_states( mixed $input ): array {
+function dcsn_sanitize_states( $input ): array {
 	if ( is_string( $input ) ) {
 		$input = explode( ',', $input );
 	}
@@ -163,7 +163,7 @@ function dcsn_translate_string( string $name, string $original ): string {
  *                               WPML's current language when empty.
  * @return string
  */
-function dcsn_resolve_message( mixed $message, string $lang = '' ): string {
+function dcsn_resolve_message( $message, string $lang = '' ): string {
 	if ( is_string( $message ) ) {
 		return $message;
 	}
@@ -201,10 +201,10 @@ function dcsn_resolve_message( mixed $message, string $lang = '' ): string {
 /**
  * Sanitize the message field — handles both string and multilingual array.
  *
- * @param mixed $input
+ * @param string|array $input
  * @return string|array
  */
-function dcsn_sanitize_message( mixed $input ): string|array {
+function dcsn_sanitize_message( $input ) {
 	if ( is_array( $input ) ) {
 		$result = [];
 		foreach ( $input as $lang => $msg ) {
@@ -218,7 +218,7 @@ function dcsn_sanitize_message( mixed $input ): string|array {
 /**
  * Check whether a message (string or array) has at least one non-empty value.
  */
-function dcsn_message_is_empty( mixed $message ): bool {
+function dcsn_message_is_empty( $message ): bool {
 	if ( is_string( $message ) ) {
 		return trim( $message ) === '';
 	}
