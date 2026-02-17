@@ -137,12 +137,33 @@ function dcsn_get_active_languages(): array {
 }
 
 /**
- * Resolve a message (string or lang-keyed array) to the current language.
+ * Translate a registered WPML string.
+ *
+ * Uses WPML's String Translation API. Falls back to the original value
+ * when WPML is not active (no .mo files needed).
+ *
+ * @param string $name     The string name as registered with wpml_register_single_string.
+ * @param string $original The original (default language) value.
+ * @return string Translated string, or original if WPML is not active.
+ */
+function dcsn_translate_string( string $name, string $original ): string {
+	return (string) apply_filters(
+		'wpml_translate_single_string',
+		$original,
+		'dc-woo-shipping-notices',
+		$name
+	);
+}
+
+/**
+ * Resolve a message (string or lang-keyed array) to the requested language.
  *
  * @param string|array $message Single string or [ 'fr' => '…', 'en' => '…' ].
+ * @param string       $lang    Optional explicit language code. Falls back to
+ *                               WPML's current language when empty.
  * @return string
  */
-function dcsn_resolve_message( mixed $message ): string {
+function dcsn_resolve_message( mixed $message, string $lang = '' ): string {
 	if ( is_string( $message ) ) {
 		return $message;
 	}
@@ -151,8 +172,12 @@ function dcsn_resolve_message( mixed $message ): string {
 		return '';
 	}
 
-	// Pick current language.
-	$lang = dcsn_current_language();
+	// Use the explicit language, or ask WPML.
+	if ( ! $lang ) {
+		$lang = dcsn_current_language();
+	}
+
+	// Pick requested language.
 	if ( $lang && isset( $message[ $lang ] ) && trim( $message[ $lang ] ) !== '' ) {
 		return $message[ $lang ];
 	}

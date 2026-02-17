@@ -51,6 +51,15 @@ final class DCSN_Checkout {
 	public function ajax_check_destination(): void {
 		check_ajax_referer( 'dcsn_checkout', 'nonce' );
 
+		// Explicit language from the front-end (reliable — admin-ajax.php
+		// doesn't always inherit the WPML front-end language).
+		$lang = sanitize_text_field( wp_unslash( $_POST['lang'] ?? '' ) );
+
+		// Also try to switch WPML context (belt-and-suspenders).
+		if ( $lang ) {
+			do_action( 'wpml_switch_language', $lang );
+		}
+
 		$country = sanitize_text_field( wp_unslash( $_POST['country'] ?? '' ) );
 		$state   = sanitize_text_field( wp_unslash( $_POST['state'] ?? '' ) );
 
@@ -68,7 +77,7 @@ final class DCSN_Checkout {
 			}
 			$rules_out[] = [
 				'mode'        => $rule['mode'],
-				'message'     => wp_kses_post( dcsn_resolve_message( $rule['message'] ?? '' ) ),
+				'message'     => wp_kses_post( dcsn_resolve_message( $rule['message'] ?? '', $lang ) ),
 				'notice_type' => $rule['notice_type'] ?? 'warning',
 			];
 		}
@@ -98,6 +107,22 @@ final class DCSN_Checkout {
 
 		$settings = DCSN_Rules::get_settings();
 
+		// Pre-resolve rules in the current language (WPML context is reliable here,
+		// unlike admin-ajax.php). Eliminates AJAX round-trip and language issues.
+		$enabled  = DCSN_Rules::get_enabled_rules();
+		$js_rules = [];
+
+		foreach ( $enabled as $rule ) {
+			$js_rules[] = [
+				'countries'     => $rule['countries'] ?? [],
+				'states'        => $rule['states'] ?? [],
+				'mode'          => $rule['mode'],
+				'message'       => wp_kses_post( dcsn_resolve_message( $rule['message'] ?? '' ) ),
+				'notice_type'   => $rule['notice_type'] ?? 'warning',
+				'stop_on_match' => ! empty( $rule['stop_on_match'] ),
+			];
+		}
+
 		wp_enqueue_style(
 			'dcsn-checkout',
 			DCSN_PLUGIN_URL . 'assets/checkout.css',
@@ -114,14 +139,13 @@ final class DCSN_Checkout {
 		);
 
 		wp_localize_script( 'dcsn-checkout', 'dcsnCheckout', [
-			'ajax_url'            => admin_url( 'admin-ajax.php' ),
-			'nonce'               => wp_create_nonce( 'dcsn_checkout' ),
 			'fallback_to_billing' => $settings['fallback_to_billing'],
+			'rules'               => $js_rules,
 			'i18n'                => [
-				'title_block'  => __( 'Livraison impossible', 'dc-woo-shipping-notices' ),
-				'title_allow'  => __( 'Information de livraison', 'dc-woo-shipping-notices' ),
-				'btn_continue' => __( 'Continuer', 'dc-woo-shipping-notices' ),
-				'btn_change'   => __( 'Changer de pays', 'dc-woo-shipping-notices' ),
+				'title_block'  => dcsn_translate_string( 'Modal title - block', 'Livraison impossible' ),
+				'title_allow'  => dcsn_translate_string( 'Modal title - allow', 'Information de livraison' ),
+				'btn_continue' => dcsn_translate_string( 'Modal button - continue', 'Continuer' ),
+				'btn_change'   => dcsn_translate_string( 'Modal button - change country', 'Changer de pays' ),
 			],
 		] );
 	}

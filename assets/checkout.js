@@ -1,10 +1,10 @@
 /**
  * DC Woo Shipping Notices — Checkout modal.
  *
+ * Rules are embedded in the page by PHP (no AJAX needed).
  * Subscribes to the WooCommerce Block checkout data store (wc/store/cart)
  * to detect country changes and display a modal when rules match.
- *
- * Falls back to jQuery change events for classic (shortcode) checkout.
+ * Falls back to change events for classic (shortcode) checkout.
  *
  * @package DC_Woo_Shipping_Notices
  */
@@ -12,9 +12,8 @@
 	'use strict';
 
 	var config   = window.dcsnCheckout || {};
-	var ajaxUrl  = config.ajax_url;
-	var nonce    = config.nonce;
 	var fallback = config.fallback_to_billing;
+	var rules    = config.rules || [];
 	var i18n     = config.i18n || {};
 
 	var prevShippingCountry = '';
@@ -22,8 +21,52 @@
 	var prevBillingCountry  = '';
 	var prevBillingState    = '';
 	var modalOpen  = false;
-	var checking   = false;
-	var bypassNext = false; // when true, let the next Place Order click through
+	var bypassNext = false;
+
+	/* ================================================================ */
+	/*  Client-side rule matching (no AJAX)                              */
+	/* ================================================================ */
+
+	/**
+	 * Match embedded rules against a country/state.
+	 *
+	 * @param {string} country ISO-2 country code.
+	 * @param {string} state   State code (optional).
+	 * @returns {{ matched: Array, hasBlock: boolean }}
+	 */
+	function matchRules(country, state) {
+		var matched  = [];
+		var hasBlock = false;
+
+		country = (country || '').toUpperCase();
+		state   = (state || '').toUpperCase();
+
+		for (var i = 0; i < rules.length; i++) {
+			var rule = rules[i];
+
+			if (!rule.countries || rule.countries.indexOf(country) === -1) {
+				continue;
+			}
+
+			if (country === 'US' && rule.states && rule.states.length > 0) {
+				if (rule.states.indexOf(state) === -1) {
+					continue;
+				}
+			}
+
+			matched.push(rule);
+
+			if (rule.mode === 'BLOCK_WITH_MESSAGE') {
+				hasBlock = true;
+			}
+
+			if (rule.stop_on_match) {
+				break;
+			}
+		}
+
+		return { matched: matched, hasBlock: hasBlock };
+	}
 
 	/* ================================================================ */
 	/*  Initialisation                                                   */
@@ -40,7 +83,6 @@
 
 	/**
 	 * Block checkout: subscribe to wp.data store.
-	 * Returns true if successfully hooked.
 	 */
 	function tryBlockCheckout() {
 		if (typeof wp === 'undefined' || !wp.data || !wp.data.select || !wp.data.subscribe) {
@@ -52,7 +94,6 @@
 			return false;
 		}
 
-		// Seed previous values.
 		var data = store.getCustomerData();
 		if (data) {
 			prevShippingCountry = (data.shippingAddress && data.shippingAddress.country) || '';
@@ -62,7 +103,7 @@
 		}
 
 		wp.data.subscribe(function () {
-			if (modalOpen || checking) return;
+			if (modalOpen) return;
 
 			var s = wp.data.select('wc/store/cart');
 			if (!s || !s.getCustomerData) return;
@@ -75,15 +116,18 @@
 			var billCountry = (d.billingAddress  && d.billingAddress.country)  || '';
 			var billState   = (d.billingAddress  && d.billingAddress.state)    || '';
 
-			// Determine effective country (shipping first, billing fallback).
 			var effectiveCountry = shipCountry || (fallback ? billCountry : '');
 			var effectiveState   = shipCountry ? shipState : (fallback ? billState : '');
 			var prevEffective    = prevShippingCountry || (fallback ? prevBillingCountry : '');
 
 			if (effectiveCountry && effectiveCountry !== prevEffective) {
-				checkDestination(effectiveCountry, effectiveState);
+				var result = matchRules(effectiveCountry, effectiveState);
+				if (result.matched.length > 0) {
+					showModal(result.matched, result.hasBlock);
+				} else {
+					acceptNewCountry();
+				}
 			} else {
-				// Keep tracking even if no modal triggered.
 				prevShippingCountry = shipCountry;
 				prevShippingState   = shipState;
 				prevBillingCountry  = billCountry;
@@ -99,7 +143,7 @@
 	 */
 	function tryClassicCheckout() {
 		document.addEventListener('change', function (e) {
-			if (modalOpen || checking) return;
+			if (modalOpen) return;
 
 			var el = e.target;
 			var isShippingCountry = (el.id === 'shipping_country' || el.name === 'shipping_country');
@@ -119,7 +163,10 @@
 			}
 
 			if (country) {
-				checkDestination(country, state);
+				var result = matchRules(country, state);
+				if (result.matched.length > 0) {
+					showModal(result.matched, result.hasBlock);
+				}
 			}
 		});
 	}
@@ -128,9 +175,6 @@
 	/*  Intercept Place Order button                                     */
 	/* ================================================================ */
 
-	/**
-	 * Selectors for the Place Order button (block + classic checkout).
-	 */
 	var PLACE_ORDER_SELECTORS = [
 		'.wc-block-components-checkout-place-order-button',
 		'.wc-block-checkout__actions button[type="submit"]',
@@ -143,13 +187,11 @@
 			var btn = e.target.closest(PLACE_ORDER_SELECTORS);
 			if (!btn) return;
 
-			// If the bypass flag is set, let it through.
 			if (bypassNext) {
 				bypassNext = false;
 				return;
 			}
 
-			// Get current destination.
 			var country = '';
 			var state   = '';
 
@@ -168,7 +210,6 @@
 				}
 			}
 
-			// Classic checkout fallback.
 			if (!country) {
 				var shipSel = document.getElementById('shipping_country');
 				if (shipSel && shipSel.value) {
@@ -185,73 +226,25 @@
 				}
 			}
 
-			if (!country) return; // no country, let WC handle validation
+			if (!country) return;
 
-			// Block the click while we check.
-			e.preventDefault();
-			e.stopPropagation();
+			var result = matchRules(country, state);
 
-			var formData = new FormData();
-			formData.append('action', 'dcsn_check_destination');
-			formData.append('nonce', nonce);
-			formData.append('country', country);
-			formData.append('state', state || '');
-
-			fetch(ajaxUrl, { method: 'POST', body: formData, credentials: 'same-origin' })
-				.then(function (r) { return r.json(); })
-				.then(function (json) {
-					if (json.success && json.data.rules && json.data.rules.length > 0) {
-						showModal(json.data.rules, json.data.has_block, function () {
-							// "Continue" callback — reclick the button.
-							bypassNext = true;
-							btn.click();
-						});
-					} else {
-						// No rules matched — proceed with order.
-						bypassNext = true;
-						btn.click();
-					}
-				})
-				.catch(function () {
-					// AJAX error — let the order go through.
+			if (result.matched.length > 0) {
+				e.preventDefault();
+				e.stopPropagation();
+				showModal(result.matched, result.hasBlock, function () {
 					bypassNext = true;
 					btn.click();
 				});
-		}, true); // capture phase to fire before React/jQuery handlers
+			}
+		}, true);
 	}
 
 	/* ================================================================ */
-	/*  AJAX: check destination against rules                            */
+	/*  Accept new country (update stored previous values)               */
 	/* ================================================================ */
 
-	function checkDestination(country, state) {
-		checking = true;
-
-		var formData = new FormData();
-		formData.append('action', 'dcsn_check_destination');
-		formData.append('nonce', nonce);
-		formData.append('country', country);
-		formData.append('state', state || '');
-
-		fetch(ajaxUrl, { method: 'POST', body: formData, credentials: 'same-origin' })
-			.then(function (r) { return r.json(); })
-			.then(function (json) {
-				checking = false;
-				if (json.success && json.data.rules && json.data.rules.length > 0) {
-					showModal(json.data.rules, json.data.has_block);
-				} else {
-					acceptNewCountry();
-				}
-			})
-			.catch(function () {
-				checking = false;
-				acceptNewCountry();
-			});
-	}
-
-	/**
-	 * Update stored previous values to the current store state.
-	 */
 	function acceptNewCountry() {
 		if (typeof wp !== 'undefined' && wp.data && wp.data.select) {
 			var s = wp.data.select('wc/store/cart');
@@ -272,30 +265,26 @@
 	/* ================================================================ */
 
 	/**
-	 * @param {Array}    rules       Matched rules from AJAX.
-	 * @param {boolean}  hasBlock    True if any BLOCK rule matched.
-	 * @param {Function} [onContinue] Optional callback when "Continue" is clicked
-	 *                                (used by Place Order interceptor).
+	 * @param {Array}    matchedRules Matched rules.
+	 * @param {boolean}  hasBlock     True if any BLOCK rule matched.
+	 * @param {Function} [onContinue] Optional callback when "Continue" is clicked.
 	 */
-	function showModal(rules, hasBlock, onContinue) {
+	function showModal(matchedRules, hasBlock, onContinue) {
 		modalOpen = true;
 
-		// Build combined messages.
 		var messagesHtml = '';
-		for (var i = 0; i < rules.length; i++) {
-			messagesHtml += '<div class="dcsn-modal__message">' + rules[i].message + '</div>';
+		for (var i = 0; i < matchedRules.length; i++) {
+			messagesHtml += '<div class="dcsn-modal__message">' + matchedRules[i].message + '</div>';
 		}
 
 		var isBlock   = !!hasBlock;
 		var titleText = isBlock
-			? (i18n.title_block || 'Livraison impossible')
-			: (i18n.title_allow || 'Information de livraison');
+			? (i18n.title_block || 'Shipping not available')
+			: (i18n.title_allow || 'Shipping information');
 
-		// Overlay.
 		var overlay = document.createElement('div');
 		overlay.className = 'dcsn-modal-overlay' + (isBlock ? ' dcsn-modal-overlay--block' : ' dcsn-modal-overlay--allow');
 
-		// Dialog.
 		var dialog = document.createElement('div');
 		dialog.className = 'dcsn-modal' + (isBlock ? ' dcsn-modal--block' : ' dcsn-modal--allow');
 		dialog.setAttribute('role', 'dialog');
@@ -307,8 +296,9 @@
 		html += '<h3 class="dcsn-modal__title">' + titleText + '</h3>';
 		html += '<div class="dcsn-modal__body">' + messagesHtml + '</div>';
 		html += '<div class="dcsn-modal__actions">';
-		var lblContinue = i18n.btn_continue || 'Continuer';
-		var lblChange   = i18n.btn_change   || 'Changer de pays';
+
+		var lblContinue = i18n.btn_continue || 'Continue';
+		var lblChange   = i18n.btn_change   || 'Change country';
 
 		if (!isBlock) {
 			html += '<button type="button" class="dcsn-modal__btn dcsn-modal__btn--continue">' + lblContinue + '</button>';
@@ -321,16 +311,12 @@
 		document.body.appendChild(overlay);
 		document.body.classList.add('dcsn-modal-open');
 
-		// Animate in.
 		requestAnimationFrame(function () {
 			overlay.classList.add('dcsn-modal-overlay--visible');
 		});
 
-		// Focus the primary action button.
 		var firstBtn = dialog.querySelector('.dcsn-modal__btn');
 		if (firstBtn) firstBtn.focus();
-
-		/* ---- Event handlers ---- */
 
 		var continueBtn = dialog.querySelector('.dcsn-modal__btn--continue');
 		var changeBtn   = dialog.querySelector('.dcsn-modal__btn--change');
@@ -339,7 +325,6 @@
 			acceptNewCountry();
 			closeModal(overlay);
 			if (typeof onContinue === 'function') {
-				// Small delay to let the modal close before re-triggering.
 				setTimeout(onContinue, 50);
 			}
 		}
@@ -353,7 +338,6 @@
 			closeModal(overlay);
 		});
 
-		// Overlay click — ALLOW only.
 		if (!isBlock) {
 			overlay.addEventListener('click', function (e) {
 				if (e.target === overlay) {
@@ -362,7 +346,6 @@
 			});
 		}
 
-		// Escape key — ALLOW only.
 		function onEsc(e) {
 			if (e.key === 'Escape' && !isBlock) {
 				handleContinue();
@@ -386,11 +369,10 @@
 	}
 
 	/* ================================================================ */
-	/*  Reset country to previous value via wp.data                      */
+	/*  Reset country to previous value                                  */
 	/* ================================================================ */
 
 	function resetCountry() {
-		// Block checkout: dispatch to store.
 		if (typeof wp !== 'undefined' && wp.data && wp.data.dispatch) {
 			var d = wp.data.dispatch('wc/store/cart');
 			if (d && d.setShippingAddress) {
@@ -402,7 +384,6 @@
 			return;
 		}
 
-		// Classic checkout: set select value.
 		var ship = document.getElementById('shipping_country');
 		if (ship) {
 			ship.value = prevShippingCountry;

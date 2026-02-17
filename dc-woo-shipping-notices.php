@@ -3,7 +3,7 @@
  * Plugin Name: DC Woo Shipping Notices
  * Plugin URI:  https://github.com/dc
  * Description: Checkout notices based on shipping destination — warn or block orders by country/state.
- * Version:     1.0.0
+ * Version:     1.2.0
  * Author:      DC
  * Text Domain: dc-woo-shipping-notices
  * Domain Path: /languages
@@ -25,10 +25,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
-define( 'DCSN_VERSION', '1.0.0' );
+define( 'DCSN_VERSION', '1.2.0' );
 define( 'DCSN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'DCSN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'DCSN_OPTION_KEY', 'dcsn_rules' );
+
+/* ------------------------------------------------------------------ */
+/*  WooCommerce feature compatibility                                   */
+/* ------------------------------------------------------------------ */
+add_action( 'before_woocommerce_init', function (): void {
+	if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+			'custom_order_tables',
+			__FILE__,
+			true
+		);
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+			'cart_checkout_blocks',
+			__FILE__,
+			true
+		);
+	}
+} );
 
 /* ------------------------------------------------------------------ */
 /*  Includes                                                           */
@@ -55,9 +73,32 @@ function dcsn_init(): void {
 	// Register the WooCommerce Settings tab (admin class loaded lazily).
 	add_filter( 'woocommerce_get_settings_pages', 'dcsn_register_settings_page' );
 
+	// Register translatable UI strings with WPML String Translation.
+	dcsn_register_wpml_strings();
+
 	new DCSN_Checkout();
 }
 add_action( 'plugins_loaded', 'dcsn_init' );
+
+/**
+ * Register modal UI strings with WPML String Translation.
+ *
+ * This makes them available under WPML > String Translation
+ * (domain "dc-woo-shipping-notices") so the admin can provide
+ * translations without .mo files.
+ */
+function dcsn_register_wpml_strings(): void {
+	$strings = [
+		'Modal title - block'           => 'Livraison impossible',
+		'Modal title - allow'           => 'Information de livraison',
+		'Modal button - continue'       => 'Continuer',
+		'Modal button - change country' => 'Changer de pays',
+	];
+
+	foreach ( $strings as $name => $value ) {
+		do_action( 'wpml_register_single_string', 'dc-woo-shipping-notices', $name, $value );
+	}
+}
 
 /**
  * Register our settings page via WooCommerce's official filter.
