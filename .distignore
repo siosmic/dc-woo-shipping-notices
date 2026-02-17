@@ -1,0 +1,10 @@
+# Files to exclude from the distribution zip.
+# Used by wp-cli/dist-archive or manual zip creation.
+.git
+.gitignore
+.distignore
+.vscode
+.cursor
+.wordpress-org
+.DS_Store
+*.log

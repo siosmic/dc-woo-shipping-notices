@@ -10,7 +10,7 @@
  * Domain Path: /languages
  * Requires PHP: 7.4
  * Requires at least: 6.0
- * Tested up to: 6.6
+ * Tested up to: 6.9
  * WC requires at least: 8.0
  * WC tested up to: 9.6
  * License:     GPLv2 or later
@@ -65,13 +65,6 @@ require_once DCSN_PLUGIN_DIR . 'includes/class-dcsn-checkout.php';
  * Initialize the plugin after plugins are loaded (WC must be active).
  */
 function dcsn_init(): void {
-	// Load translations (.mo files from languages/).
-	load_plugin_textdomain(
-		'dc-woo-shipping-notices',
-		false,
-		dirname( plugin_basename( DCSN_PLUGIN_DIR . 'dc-woo-shipping-notices.php' ) ) . '/languages'
-	);
-
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		add_action( 'admin_notices', 'dcsn_missing_wc_notice' );
 		return;
