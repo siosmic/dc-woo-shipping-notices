@@ -1,0 +1,223 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Unprinted
+# This file is distributed under the same license as the DC Woo Shipping Notices package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: DC Woo Shipping Notices 1.2.0\n"
+"Report-Msgid-Bugs-To: https://github.com/unprintedch/dc-woo-shipping-notices/"
+"issues\n"
+"POT-Creation-Date: 2026-02-17 09:49+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: dc-woo-shipping-notices.php:144
+msgid ""
+"DC Woo Shipping Notices requires WooCommerce to be installed and active."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:21
+msgid "Shipping Notices"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:43
+msgid "Shipping Destination Notices"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:45
+msgid ""
+"Rules are evaluated in priority order at checkout. Blocking rules prevent "
+"the order from being placed."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:49
+msgid "Fallback to billing address"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:50
+msgid "Use billing address when shipping address is empty."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:56
+msgid "Country modal"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:57
+msgid ""
+"Show a modal dialog when the customer selects a destination matching a rule."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:159
+msgid "Security check failed."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:235
+msgid "Rules"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:238
+msgid "Add rule"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:242
+msgid "No rules yet."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:247 includes/class-dcsn-admin.php:350
+msgid "Enabled"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:248 includes/class-dcsn-admin.php:361
+msgid "Label"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:249 includes/class-dcsn-admin.php:367
+msgid "Countries"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:250 includes/class-dcsn-admin.php:382
+msgid "US States"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:251 includes/class-dcsn-admin.php:391
+msgid "Mode"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:252 includes/class-dcsn-admin.php:457
+msgid "Priority"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:253
+msgid "Actions"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:273
+msgid "Edit"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:274
+msgid "Duplicate"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:275
+msgid "Delete this rule?"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:275
+msgid "Delete"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:323
+msgid "Edit Rule"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:324
+msgid "Add Rule"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:339
+msgid "Back to list"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:354
+msgid "Active"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:362
+msgid "Internal label…"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:376
+msgid "Hold Ctrl/Cmd to select multiple."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:384
+msgid "CA, NY, TX… (empty = all US states)"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:385
+msgid "Comma-separated state codes. Leave empty to match all US states."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:405
+msgid "Notice type"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:430 includes/class-dcsn-admin.php:447
+msgid "Message"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:440 includes/class-dcsn-admin.php:450
+msgid "Basic HTML allowed (links, bold, italic)."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:460
+msgid "Lower runs first."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:466
+msgid "Stop after match"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:470
+msgid "Do not evaluate further rules if this one matches."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:477
+msgid "Save rule"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:478
+msgid "Cancel"
+msgstr ""
+
+#: includes/class-dcsn-admin.php:520
+msgid "Rule saved."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:521
+msgid "Rule deleted."
+msgstr ""
+
+#: includes/class-dcsn-admin.php:522
+msgid "Rule duplicated."
+msgstr ""
+
+#: includes/class-dcsn-rules.php:182
+msgid "At least one country is required."
+msgstr ""
+
+#: includes/class-dcsn-rules.php:186
+msgid "Message is required (at least one language)."
+msgstr ""
+
+#: includes/class-dcsn-rules.php:190
+msgid "Invalid mode."
+msgstr ""
+
+#: includes/class-dcsn-rules.php:194
+msgid "US states can only be set if countries include US."
+msgstr ""
+
+#: includes/helpers.php:64
+msgid "Allow with message"
+msgstr ""
+
+#: includes/helpers.php:65
+msgid "Block with message"
+msgstr ""
+
+#: includes/helpers.php:76
+msgid "Info"
+msgstr ""
+
+#: includes/helpers.php:77
+msgid "Warning"
+msgstr ""

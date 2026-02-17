@@ -1,17 +1,19 @@
 <?php
 /**
  * Plugin Name: DC Woo Shipping Notices
- * Plugin URI:  https://github.com/dc
+ * Plugin URI:  https://github.com/unprintedch/dc-woo-shipping-notices
  * Description: Checkout notices based on shipping destination — warn or block orders by country/state.
  * Version:     1.2.0
- * Author:      DC
+ * Author:      Unprinted
+ * Author URI:  https://unprinted.ch
  * Text Domain: dc-woo-shipping-notices
  * Domain Path: /languages
  * Requires PHP: 8.2
  * Requires at least: 6.6
  * WC requires at least: 8.0
  * WC tested up to: 9.6
- * License: GPLv2 or later
+ * License:     GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  *
  * @package DC_Woo_Shipping_Notices
  */
@@ -62,6 +64,13 @@ require_once DCSN_PLUGIN_DIR . 'includes/class-dcsn-checkout.php';
  * Initialize the plugin after plugins are loaded (WC must be active).
  */
 function dcsn_init(): void {
+	// Load translations (.mo files from languages/).
+	load_plugin_textdomain(
+		'dc-woo-shipping-notices',
+		false,
+		dirname( plugin_basename( DCSN_PLUGIN_DIR . 'dc-woo-shipping-notices.php' ) ) . '/languages'
+	);
+
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		add_action( 'admin_notices', 'dcsn_missing_wc_notice' );
 		return;

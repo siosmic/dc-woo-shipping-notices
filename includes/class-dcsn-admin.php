@@ -185,7 +185,10 @@ class DCSN_Admin extends WC_Settings_Page {
 			return;
 		}
 
-		// phpcs:disable WordPress.Security.NonceVerification.Missing
+		if ( ! isset( $_POST['dcsn_rule_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['dcsn_rule_nonce'] ) ), 'dcsn_save_rule' ) ) {
+			wp_die( esc_html__( 'Security check failed.', 'dc-woo-shipping-notices' ) );
+		}
+
 		$data = [
 			'id'            => sanitize_text_field( $_POST['rule_id'] ?? '' ),
 			'enabled'       => ! empty( $_POST['enabled'] ),
@@ -262,7 +265,7 @@ class DCSN_Admin extends WC_Settings_Page {
 					?>
 					<tr>
 						<td>
-							<span class="dcsn-dot <?php echo $rule['enabled'] ? 'dcsn-enabled' : 'dcsn-disabled'; ?>"></span>
+							<span class="dcsn-dot <?php echo esc_attr( $rule['enabled'] ? 'dcsn-enabled' : 'dcsn-disabled' ); ?>"></span>
 						</td>
 						<td><strong><a href="<?php echo esc_url( $edit_url ); ?>"><?php echo esc_html( $rule['label'] ?: '—' ); ?></a></strong></td>
 						<td><?php echo esc_html( implode( ', ', $rule['countries'] ?? [] ) ); ?></td>
@@ -343,6 +346,7 @@ class DCSN_Admin extends WC_Settings_Page {
 		<!-- Hidden fields (inside WC's #mainform) -->
 		<input type="hidden" name="dcsn_screen" value="edit">
 		<input type="hidden" name="rule_id" value="<?php echo esc_attr( $rule['id'] ); ?>">
+		<?php wp_nonce_field( 'dcsn_save_rule', 'dcsn_rule_nonce' ); ?>
 
 		<table class="form-table dcsn-form">
 			<!-- Enabled -->
