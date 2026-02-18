@@ -6,7 +6,7 @@
  * Version:     1.0.0
  * Author:      Unprinted
  * Author URI:  https://unprinted.ch
- * Text Domain: dc-woo-shipping-notices
+ * Text Domain: shipping-destination-notices-for-woocommerce
  * Domain Path: /languages
  * Requires PHP: 7.4
  * Requires at least: 6.0
@@ -87,7 +87,7 @@ add_action( 'plugins_loaded', 'dcsn_init' );
  * Register modal UI strings with WPML String Translation.
  *
  * This makes them available under WPML > String Translation
- * (domain "dc-woo-shipping-notices") so the admin can provide
+ * (domain "shipping-destination-notices-for-woocommerce") so the admin can provide
  * translations without .mo files.
  */
 function dcsn_register_wpml_strings(): void {
@@ -99,7 +99,8 @@ function dcsn_register_wpml_strings(): void {
 	];
 
 	foreach ( $strings as $name => $value ) {
-		do_action( 'wpml_register_single_string', 'dc-woo-shipping-notices', $name, $value );
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
+		do_action( 'wpml_register_single_string', 'shipping-destination-notices-for-woocommerce', $name, $value );
 	}
 }
 
@@ -135,7 +136,7 @@ function dcsn_maybe_migrate_settings(): void {
 function dcsn_missing_wc_notice(): void {
 	printf(
 		'<div class="notice notice-error"><p>%s</p></div>',
-		esc_html__( 'DC Woo Shipping Notices requires WooCommerce to be installed and active.', 'dc-woo-shipping-notices' )
+		esc_html__( 'DC Woo Shipping Notices requires WooCommerce to be installed and active.', 'shipping-destination-notices-for-woocommerce' )
 	);
 }
 

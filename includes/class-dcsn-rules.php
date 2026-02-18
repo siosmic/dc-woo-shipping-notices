@@ -179,19 +179,19 @@ final class DCSN_Rules {
 		$errors = [];
 
 		if ( empty( $rule['countries'] ) ) {
-			$errors[] = __( 'At least one country is required.', 'dc-woo-shipping-notices' );
+			$errors[] = __( 'At least one country is required.', 'shipping-destination-notices-for-woocommerce' );
 		}
 
 		if ( dcsn_message_is_empty( $rule['message'] ?? '' ) ) {
-			$errors[] = __( 'Message is required (at least one language).', 'dc-woo-shipping-notices' );
+			$errors[] = __( 'Message is required (at least one language).', 'shipping-destination-notices-for-woocommerce' );
 		}
 
 		if ( ! in_array( $rule['mode'] ?? '', [ 'ALLOW_WITH_MESSAGE', 'BLOCK_WITH_MESSAGE' ], true ) ) {
-			$errors[] = __( 'Invalid mode.', 'dc-woo-shipping-notices' );
+			$errors[] = __( 'Invalid mode.', 'shipping-destination-notices-for-woocommerce' );
 		}
 
 		if ( ! empty( $rule['states'] ) && ! in_array( 'US', $rule['countries'] ?? [], true ) ) {
-			$errors[] = __( 'US states can only be set if countries include US.', 'dc-woo-shipping-notices' );
+			$errors[] = __( 'US states can only be set if countries include US.', 'shipping-destination-notices-for-woocommerce' );
 		}
 
 		return $errors;

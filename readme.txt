@@ -26,7 +26,7 @@ Allow store admins to show warnings or block shipping to specific countries or s
 
 == Installation ==
 
-1. Upload the `dc-woo-shipping-notices` folder to `/wp-content/plugins/`.
+1. Upload the `shipping-destination-notices-for-woocommerce` folder to `/wp-content/plugins/`.
 2. Activate the plugin through the **Plugins** menu in WordPress.
 3. Go to **WooCommerce > Settings > Shipping Notices** to create your first rule.
 

@@ -18,7 +18,7 @@ class DCSN_Admin extends WC_Settings_Page {
 
 	public function __construct() {
 		$this->id    = 'shipping_notices';
-		$this->label = __( 'Shipping Notices', 'dc-woo-shipping-notices' );
+		$this->label = __( 'Shipping Notices', 'shipping-destination-notices-for-woocommerce' );
 
 		parent::__construct();
 
@@ -40,21 +40,21 @@ class DCSN_Admin extends WC_Settings_Page {
 	protected function get_settings_for_default_section(): array {
 		return [
 			[
-				'title' => __( 'Shipping Destination Notices', 'dc-woo-shipping-notices' ),
+				'title' => __( 'Shipping Destination Notices', 'shipping-destination-notices-for-woocommerce' ),
 				'type'  => 'title',
-				'desc'  => __( 'Rules are evaluated in priority order at checkout. Blocking rules prevent the order from being placed.', 'dc-woo-shipping-notices' ),
+				'desc'  => __( 'Rules are evaluated in priority order at checkout. Blocking rules prevent the order from being placed.', 'shipping-destination-notices-for-woocommerce' ),
 				'id'    => 'dcsn_options',
 			],
 			[
-				'title'   => __( 'Fallback to billing address', 'dc-woo-shipping-notices' ),
-				'desc'    => __( 'Use billing address when shipping address is empty.', 'dc-woo-shipping-notices' ),
+				'title'   => __( 'Fallback to billing address', 'shipping-destination-notices-for-woocommerce' ),
+				'desc'    => __( 'Use billing address when shipping address is empty.', 'shipping-destination-notices-for-woocommerce' ),
 				'id'      => 'dcsn_fallback_to_billing',
 				'default' => 'yes',
 				'type'    => 'checkbox',
 			],
 			[
-				'title'   => __( 'Country modal', 'dc-woo-shipping-notices' ),
-				'desc'    => __( 'Show a modal dialog when the customer selects a destination matching a rule.', 'dc-woo-shipping-notices' ),
+				'title'   => __( 'Country modal', 'shipping-destination-notices-for-woocommerce' ),
+				'desc'    => __( 'Show a modal dialog when the customer selects a destination matching a rule.', 'shipping-destination-notices-for-woocommerce' ),
 				'id'      => 'dcsn_enable_modal',
 				'default' => 'yes',
 				'type'    => 'checkbox',
@@ -78,7 +78,7 @@ class DCSN_Admin extends WC_Settings_Page {
 			return;
 		}
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		if ( ( $_GET['tab'] ?? '' ) !== $this->id ) {
+		if ( sanitize_text_field( wp_unslash( $_GET['tab'] ?? '' ) ) !== $this->id ) {
 			return;
 		}
 
@@ -101,17 +101,17 @@ class DCSN_Admin extends WC_Settings_Page {
 	 * - Edit screen: rule editor form (fields inside WC's #mainform).
 	 */
 	public function output(): void {
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- WooCommerce core global.
 		global $hide_save_button;
 
 		// Handle GET actions (delete, duplicate) before rendering.
 		$this->handle_get_actions();
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$action = sanitize_text_field( $_GET['action'] ?? '' );
+		$action = sanitize_text_field( wp_unslash( $_GET['action'] ?? '' ) );
 
 		if ( $action === 'edit' || $action === 'add' ) {
-			// Edit screen: hide WC "Save changes" button, we add our own.
-			$hide_save_button = true;
+			$hide_save_button = true; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 			$this->render_edit_screen();
 		} else {
 			// List screen: WooCommerce settings fields + rules table.
@@ -145,7 +145,7 @@ class DCSN_Admin extends WC_Settings_Page {
 
 	private function handle_get_actions(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$action = sanitize_text_field( $_GET['dcsn_action'] ?? '' );
+		$action = sanitize_text_field( wp_unslash( $_GET['dcsn_action'] ?? '' ) );
 		if ( ! $action ) {
 			return;
 		}
@@ -154,12 +154,11 @@ class DCSN_Admin extends WC_Settings_Page {
 			return;
 		}
 
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		if ( ! wp_verify_nonce( $_GET['_wpnonce'] ?? '', 'dcsn_action' ) ) {
-			wp_die( esc_html__( 'Security check failed.', 'dc-woo-shipping-notices' ) );
+		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ?? '' ) ), 'dcsn_action' ) ) {
+			wp_die( esc_html__( 'Security check failed.', 'shipping-destination-notices-for-woocommerce' ) );
 		}
 
-		$rule_id = sanitize_text_field( $_GET['rule_id'] ?? '' );
+		$rule_id = sanitize_text_field( wp_unslash( $_GET['rule_id'] ?? '' ) );
 
 		if ( $action === 'delete' && $rule_id ) {
 			DCSN_Rules::delete_rule( $rule_id );
@@ -186,22 +185,21 @@ class DCSN_Admin extends WC_Settings_Page {
 		}
 
 		if ( ! isset( $_POST['dcsn_rule_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['dcsn_rule_nonce'] ) ), 'dcsn_save_rule' ) ) {
-			wp_die( esc_html__( 'Security check failed.', 'dc-woo-shipping-notices' ) );
+			wp_die( esc_html__( 'Security check failed.', 'shipping-destination-notices-for-woocommerce' ) );
 		}
 
 		$data = [
-			'id'            => sanitize_text_field( $_POST['rule_id'] ?? '' ),
+			'id'            => sanitize_text_field( wp_unslash( $_POST['rule_id'] ?? '' ) ),
 			'enabled'       => ! empty( $_POST['enabled'] ),
-			'label'         => $_POST['label'] ?? '',
-			'countries'     => $_POST['countries'] ?? [],
-			'states'        => $_POST['states'] ?? '',
-			'mode'          => $_POST['mode'] ?? '',
-			'notice_type'   => $_POST['notice_type'] ?? 'warning',
-			'message'       => $_POST['message'] ?? '',
-			'priority'      => $_POST['priority'] ?? DCSN_Rules::next_priority(),
+			'label'         => sanitize_text_field( wp_unslash( $_POST['label'] ?? '' ) ),
+			'countries'     => array_map( 'sanitize_text_field', (array) wp_unslash( $_POST['countries'] ?? [] ) ),
+			'states'        => sanitize_text_field( wp_unslash( $_POST['states'] ?? '' ) ),
+			'mode'          => sanitize_text_field( wp_unslash( $_POST['mode'] ?? '' ) ),
+			'notice_type'   => sanitize_text_field( wp_unslash( $_POST['notice_type'] ?? 'warning' ) ),
+			'message'       => dcsn_sanitize_message( wp_unslash( $_POST['message'] ?? '' ) ),
+			'priority'      => absint( wp_unslash( $_POST['priority'] ?? DCSN_Rules::next_priority() ) ),
 			'stop_on_match' => ! empty( $_POST['stop_on_match'] ),
 		];
-		// phpcs:enable
 
 		$result = DCSN_Rules::save_rule( $data );
 
@@ -235,25 +233,25 @@ class DCSN_Admin extends WC_Settings_Page {
 		$modes   = dcsn_get_mode_labels();
 		?>
 
-		<h2><?php esc_html_e( 'Rules', 'dc-woo-shipping-notices' ); ?></h2>
+		<h2><?php esc_html_e( 'Rules', 'shipping-destination-notices-for-woocommerce' ); ?></h2>
 
 		<p>
-			<a href="<?php echo esc_url( $add_url ); ?>" class="button button-primary"><?php esc_html_e( 'Add rule', 'dc-woo-shipping-notices' ); ?></a>
+			<a href="<?php echo esc_url( $add_url ); ?>" class="button button-primary"><?php esc_html_e( 'Add rule', 'shipping-destination-notices-for-woocommerce' ); ?></a>
 		</p>
 
 		<?php if ( empty( $rules ) ) : ?>
-			<p><em><?php esc_html_e( 'No rules yet.', 'dc-woo-shipping-notices' ); ?></em></p>
+			<p><em><?php esc_html_e( 'No rules yet.', 'shipping-destination-notices-for-woocommerce' ); ?></em></p>
 		<?php else : ?>
 			<table class="widefat dcsn-rules-table">
 				<thead>
 					<tr>
-						<th><?php esc_html_e( 'Enabled', 'dc-woo-shipping-notices' ); ?></th>
-						<th><?php esc_html_e( 'Label', 'dc-woo-shipping-notices' ); ?></th>
-						<th><?php esc_html_e( 'Countries', 'dc-woo-shipping-notices' ); ?></th>
-						<th><?php esc_html_e( 'US States', 'dc-woo-shipping-notices' ); ?></th>
-						<th><?php esc_html_e( 'Mode', 'dc-woo-shipping-notices' ); ?></th>
-						<th><?php esc_html_e( 'Priority', 'dc-woo-shipping-notices' ); ?></th>
-						<th><?php esc_html_e( 'Actions', 'dc-woo-shipping-notices' ); ?></th>
+						<th><?php esc_html_e( 'Enabled', 'shipping-destination-notices-for-woocommerce' ); ?></th>
+						<th><?php esc_html_e( 'Label', 'shipping-destination-notices-for-woocommerce' ); ?></th>
+						<th><?php esc_html_e( 'Countries', 'shipping-destination-notices-for-woocommerce' ); ?></th>
+						<th><?php esc_html_e( 'US States', 'shipping-destination-notices-for-woocommerce' ); ?></th>
+						<th><?php esc_html_e( 'Mode', 'shipping-destination-notices-for-woocommerce' ); ?></th>
+						<th><?php esc_html_e( 'Priority', 'shipping-destination-notices-for-woocommerce' ); ?></th>
+						<th><?php esc_html_e( 'Actions', 'shipping-destination-notices-for-woocommerce' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -273,9 +271,9 @@ class DCSN_Admin extends WC_Settings_Page {
 						<td><span class="dcsn-mode <?php echo esc_attr( $mode_class ); ?>"><?php echo esc_html( $modes[ $rule['mode'] ] ?? $rule['mode'] ); ?></span></td>
 						<td><?php echo (int) $rule['priority']; ?></td>
 						<td class="dcsn-actions">
-							<a href="<?php echo esc_url( $edit_url ); ?>"><?php esc_html_e( 'Edit', 'dc-woo-shipping-notices' ); ?></a>
-							<a href="<?php echo esc_url( $dup_url ); ?>"><?php esc_html_e( 'Duplicate', 'dc-woo-shipping-notices' ); ?></a>
-							<a href="<?php echo esc_url( $del_url ); ?>" class="dcsn-delete" onclick="return confirm('<?php echo esc_js( __( 'Delete this rule?', 'dc-woo-shipping-notices' ) ); ?>');"><?php esc_html_e( 'Delete', 'dc-woo-shipping-notices' ); ?></a>
+							<a href="<?php echo esc_url( $edit_url ); ?>"><?php esc_html_e( 'Edit', 'shipping-destination-notices-for-woocommerce' ); ?></a>
+							<a href="<?php echo esc_url( $dup_url ); ?>"><?php esc_html_e( 'Duplicate', 'shipping-destination-notices-for-woocommerce' ); ?></a>
+							<a href="<?php echo esc_url( $del_url ); ?>" class="dcsn-delete" onclick="return confirm('<?php echo esc_js( __( 'Delete this rule?', 'shipping-destination-notices-for-woocommerce' ) ); ?>');"><?php esc_html_e( 'Delete', 'shipping-destination-notices-for-woocommerce' ); ?></a>
 						</td>
 					</tr>
 					<?php endforeach; ?>
@@ -299,7 +297,7 @@ class DCSN_Admin extends WC_Settings_Page {
 
 		// Load rule data.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$rule_id = sanitize_text_field( $_GET['rule_id'] ?? '' );
+		$rule_id = sanitize_text_field( wp_unslash( $_GET['rule_id'] ?? '' ) );
 		$rule    = null;
 
 		// Check for re-post data (validation failed → redirect back).
@@ -323,8 +321,8 @@ class DCSN_Admin extends WC_Settings_Page {
 		$notice_types = dcsn_get_notice_type_labels();
 		$is_edit      = ! empty( $rule['id'] );
 		$title        = $is_edit
-			? __( 'Edit Rule', 'dc-woo-shipping-notices' )
-			: __( 'Add Rule', 'dc-woo-shipping-notices' );
+			? __( 'Edit Rule', 'shipping-destination-notices-for-woocommerce' )
+			: __( 'Add Rule', 'shipping-destination-notices-for-woocommerce' );
 
 		// WooCommerce countries list.
 		$wc_countries = WC()->countries->get_countries();
@@ -339,7 +337,7 @@ class DCSN_Admin extends WC_Settings_Page {
 		<?php endif; ?>
 
 		<h2>
-			<a href="<?php echo esc_url( $tab_url ); ?>">&larr; <?php esc_html_e( 'Back to list', 'dc-woo-shipping-notices' ); ?></a>
+			<a href="<?php echo esc_url( $tab_url ); ?>">&larr; <?php esc_html_e( 'Back to list', 'shipping-destination-notices-for-woocommerce' ); ?></a>
 			&nbsp; <?php echo esc_html( $title ); ?>
 		</h2>
 
@@ -351,24 +349,24 @@ class DCSN_Admin extends WC_Settings_Page {
 		<table class="form-table dcsn-form">
 			<!-- Enabled -->
 			<tr>
-				<th scope="row"><?php esc_html_e( 'Enabled', 'dc-woo-shipping-notices' ); ?></th>
+				<th scope="row"><?php esc_html_e( 'Enabled', 'shipping-destination-notices-for-woocommerce' ); ?></th>
 				<td>
 					<label>
 						<input type="checkbox" name="enabled" value="1" <?php checked( $rule['enabled'] ); ?>>
-						<?php esc_html_e( 'Active', 'dc-woo-shipping-notices' ); ?>
+						<?php esc_html_e( 'Active', 'shipping-destination-notices-for-woocommerce' ); ?>
 					</label>
 				</td>
 			</tr>
 
 			<!-- Label -->
 			<tr>
-				<th scope="row"><label for="dcsn-label"><?php esc_html_e( 'Label', 'dc-woo-shipping-notices' ); ?></label></th>
-				<td><input type="text" id="dcsn-label" name="label" value="<?php echo esc_attr( $rule['label'] ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Internal label…', 'dc-woo-shipping-notices' ); ?>"></td>
+				<th scope="row"><label for="dcsn-label"><?php esc_html_e( 'Label', 'shipping-destination-notices-for-woocommerce' ); ?></label></th>
+				<td><input type="text" id="dcsn-label" name="label" value="<?php echo esc_attr( $rule['label'] ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'Internal label…', 'shipping-destination-notices-for-woocommerce' ); ?>"></td>
 			</tr>
 
 			<!-- Countries -->
 			<tr>
-				<th scope="row"><label for="dcsn-countries"><?php esc_html_e( 'Countries', 'dc-woo-shipping-notices' ); ?></label></th>
+				<th scope="row"><label for="dcsn-countries"><?php esc_html_e( 'Countries', 'shipping-destination-notices-for-woocommerce' ); ?></label></th>
 				<td>
 					<select id="dcsn-countries" name="countries[]" multiple size="8" style="min-width:320px;min-height:180px;">
 						<?php foreach ( $wc_countries as $code => $name ) : ?>
@@ -377,22 +375,22 @@ class DCSN_Admin extends WC_Settings_Page {
 							</option>
 						<?php endforeach; ?>
 					</select>
-					<p class="description"><?php esc_html_e( 'Hold Ctrl/Cmd to select multiple.', 'dc-woo-shipping-notices' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Hold Ctrl/Cmd to select multiple.', 'shipping-destination-notices-for-woocommerce' ); ?></p>
 				</td>
 			</tr>
 
 			<!-- US States -->
 			<tr id="dcsn-states-row" style="<?php echo in_array( 'US', $rule['countries'] ?? [], true ) ? '' : 'display:none;'; ?>">
-				<th scope="row"><label for="dcsn-states"><?php esc_html_e( 'US States', 'dc-woo-shipping-notices' ); ?></label></th>
+				<th scope="row"><label for="dcsn-states"><?php esc_html_e( 'US States', 'shipping-destination-notices-for-woocommerce' ); ?></label></th>
 				<td>
-					<input type="text" id="dcsn-states" name="states" value="<?php echo esc_attr( implode( ', ', $rule['states'] ?? [] ) ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'CA, NY, TX… (empty = all US states)', 'dc-woo-shipping-notices' ); ?>">
-					<p class="description"><?php esc_html_e( 'Comma-separated state codes. Leave empty to match all US states.', 'dc-woo-shipping-notices' ); ?></p>
+					<input type="text" id="dcsn-states" name="states" value="<?php echo esc_attr( implode( ', ', $rule['states'] ?? [] ) ); ?>" class="regular-text" placeholder="<?php esc_attr_e( 'CA, NY, TX… (empty = all US states)', 'shipping-destination-notices-for-woocommerce' ); ?>">
+					<p class="description"><?php esc_html_e( 'Comma-separated state codes. Leave empty to match all US states.', 'shipping-destination-notices-for-woocommerce' ); ?></p>
 				</td>
 			</tr>
 
 			<!-- Mode -->
 			<tr>
-				<th scope="row"><label for="dcsn-mode"><?php esc_html_e( 'Mode', 'dc-woo-shipping-notices' ); ?></label></th>
+				<th scope="row"><label for="dcsn-mode"><?php esc_html_e( 'Mode', 'shipping-destination-notices-for-woocommerce' ); ?></label></th>
 				<td>
 					<select id="dcsn-mode" name="mode">
 						<?php foreach ( $modes as $val => $label ) : ?>
@@ -406,7 +404,7 @@ class DCSN_Admin extends WC_Settings_Page {
 
 			<!-- Notice type -->
 			<tr id="dcsn-notice-type-row" style="<?php echo $rule['mode'] === 'BLOCK_WITH_MESSAGE' ? 'display:none;' : ''; ?>">
-				<th scope="row"><label for="dcsn-notice-type"><?php esc_html_e( 'Notice type', 'dc-woo-shipping-notices' ); ?></label></th>
+				<th scope="row"><label for="dcsn-notice-type"><?php esc_html_e( 'Notice type', 'shipping-destination-notices-for-woocommerce' ); ?></label></th>
 				<td>
 					<select id="dcsn-notice-type" name="notice_type">
 						<?php foreach ( $notice_types as $val => $label ) : ?>
@@ -431,7 +429,7 @@ class DCSN_Admin extends WC_Settings_Page {
 			<tr>
 				<th scope="row">
 					<label for="dcsn-message-<?php echo esc_attr( $lang_code ); ?>">
-						<?php esc_html_e( 'Message', 'dc-woo-shipping-notices' ); ?>
+						<?php esc_html_e( 'Message', 'shipping-destination-notices-for-woocommerce' ); ?>
 						<?php if ( $lang_flag ) : ?>
 							<img src="<?php echo esc_url( $lang_flag ); ?>" alt="" style="vertical-align:middle;margin-left:4px;" width="18" height="12">
 						<?php endif; ?>
@@ -441,45 +439,45 @@ class DCSN_Admin extends WC_Settings_Page {
 				<td>
 					<textarea id="dcsn-message-<?php echo esc_attr( $lang_code ); ?>" name="message[<?php echo esc_attr( $lang_code ); ?>]" rows="3" class="large-text"><?php echo esc_textarea( $msg_value ); ?></textarea>
 					<?php if ( $lang_code === array_key_first( $wpml_languages ) ) : ?>
-						<p class="description"><?php esc_html_e( 'Basic HTML allowed (links, bold, italic).', 'dc-woo-shipping-notices' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Basic HTML allowed (links, bold, italic).', 'shipping-destination-notices-for-woocommerce' ); ?></p>
 					<?php endif; ?>
 				</td>
 			</tr>
 			<?php endforeach; ?>
 			<?php else : ?>
 			<tr>
-				<th scope="row"><label for="dcsn-message"><?php esc_html_e( 'Message', 'dc-woo-shipping-notices' ); ?></label></th>
+				<th scope="row"><label for="dcsn-message"><?php esc_html_e( 'Message', 'shipping-destination-notices-for-woocommerce' ); ?></label></th>
 				<td>
 					<textarea id="dcsn-message" name="message" rows="4" class="large-text"><?php echo esc_textarea( is_array( $rule['message'] ) ? dcsn_resolve_message( $rule['message'] ) : $rule['message'] ); ?></textarea>
-					<p class="description"><?php esc_html_e( 'Basic HTML allowed (links, bold, italic).', 'dc-woo-shipping-notices' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Basic HTML allowed (links, bold, italic).', 'shipping-destination-notices-for-woocommerce' ); ?></p>
 				</td>
 			</tr>
 			<?php endif; ?>
 
 			<!-- Priority -->
 			<tr>
-				<th scope="row"><label for="dcsn-priority"><?php esc_html_e( 'Priority', 'dc-woo-shipping-notices' ); ?></label></th>
+				<th scope="row"><label for="dcsn-priority"><?php esc_html_e( 'Priority', 'shipping-destination-notices-for-woocommerce' ); ?></label></th>
 				<td>
 					<input type="number" id="dcsn-priority" name="priority" value="<?php echo (int) $rule['priority']; ?>" min="0" step="1" style="width:80px;">
-					<p class="description"><?php esc_html_e( 'Lower runs first.', 'dc-woo-shipping-notices' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Lower runs first.', 'shipping-destination-notices-for-woocommerce' ); ?></p>
 				</td>
 			</tr>
 
 			<!-- Stop on match -->
 			<tr>
-				<th scope="row"><?php esc_html_e( 'Stop after match', 'dc-woo-shipping-notices' ); ?></th>
+				<th scope="row"><?php esc_html_e( 'Stop after match', 'shipping-destination-notices-for-woocommerce' ); ?></th>
 				<td>
 					<label>
 						<input type="checkbox" name="stop_on_match" value="1" <?php checked( $rule['stop_on_match'] ); ?>>
-						<?php esc_html_e( 'Do not evaluate further rules if this one matches.', 'dc-woo-shipping-notices' ); ?>
+						<?php esc_html_e( 'Do not evaluate further rules if this one matches.', 'shipping-destination-notices-for-woocommerce' ); ?>
 					</label>
 				</td>
 			</tr>
 		</table>
 
 		<p class="submit">
-			<button type="submit" name="save" class="button button-primary" value="1"><?php esc_html_e( 'Save rule', 'dc-woo-shipping-notices' ); ?></button>
-			<a href="<?php echo esc_url( $tab_url ); ?>" class="button"><?php esc_html_e( 'Cancel', 'dc-woo-shipping-notices' ); ?></a>
+			<button type="submit" name="save" class="button button-primary" value="1"><?php esc_html_e( 'Save rule', 'shipping-destination-notices-for-woocommerce' ); ?></button>
+			<a href="<?php echo esc_url( $tab_url ); ?>" class="button"><?php esc_html_e( 'Cancel', 'shipping-destination-notices-for-woocommerce' ); ?></a>
 		</p>
 
 		<!-- Inline JS for toggling states row and notice type row -->
@@ -515,15 +513,15 @@ class DCSN_Admin extends WC_Settings_Page {
 	 */
 	private function maybe_show_notice(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$msg = sanitize_text_field( $_GET['dcsn_msg'] ?? '' );
+		$msg = sanitize_text_field( wp_unslash( $_GET['dcsn_msg'] ?? '' ) );
 		if ( ! $msg ) {
 			return;
 		}
 
 		$messages = [
-			'saved'      => __( 'Rule saved.', 'dc-woo-shipping-notices' ),
-			'deleted'    => __( 'Rule deleted.', 'dc-woo-shipping-notices' ),
-			'duplicated' => __( 'Rule duplicated.', 'dc-woo-shipping-notices' ),
+			'saved'      => __( 'Rule saved.', 'shipping-destination-notices-for-woocommerce' ),
+			'deleted'    => __( 'Rule deleted.', 'shipping-destination-notices-for-woocommerce' ),
+			'duplicated' => __( 'Rule duplicated.', 'shipping-destination-notices-for-woocommerce' ),
 		];
 
 		if ( isset( $messages[ $msg ] ) ) {

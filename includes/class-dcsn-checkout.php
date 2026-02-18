@@ -57,6 +57,7 @@ final class DCSN_Checkout {
 
 		// Also try to switch WPML context (belt-and-suspenders).
 		if ( $lang ) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
 			do_action( 'wpml_switch_language', $lang );
 		}
 

@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Shipping Destination Notices for WooCommerce 1.0.0\n"
-"Report-Msgid-Bugs-To: https://github.com/unprintedch/dc-woo-shipping-notices/"
+"Report-Msgid-Bugs-To: https://github.com/unprintedch/shipping-destination-notices-for-woocommerce/"
 "issues\n"
 "POT-Creation-Date: 2026-02-17 10:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: dc-woo-shipping-notices.php:145
+#: dc-woo-shipping-notices.php:139
 msgid ""
 "DC Woo Shipping Notices requires WooCommerce to be installed and active."
 msgstr ""

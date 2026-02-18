@@ -61,8 +61,8 @@ function dcsn_sanitize_states( $input ): array {
  */
 function dcsn_get_mode_labels(): array {
 	return [
-		'ALLOW_WITH_MESSAGE' => __( 'Allow with message', 'dc-woo-shipping-notices' ),
-		'BLOCK_WITH_MESSAGE' => __( 'Block with message', 'dc-woo-shipping-notices' ),
+		'ALLOW_WITH_MESSAGE' => __( 'Allow with message', 'shipping-destination-notices-for-woocommerce' ),
+		'BLOCK_WITH_MESSAGE' => __( 'Block with message', 'shipping-destination-notices-for-woocommerce' ),
 	];
 }
 
@@ -73,8 +73,8 @@ function dcsn_get_mode_labels(): array {
  */
 function dcsn_get_notice_type_labels(): array {
 	return [
-		'notice'  => __( 'Info', 'dc-woo-shipping-notices' ),
-		'warning' => __( 'Warning', 'dc-woo-shipping-notices' ),
+		'notice'  => __( 'Info', 'shipping-destination-notices-for-woocommerce' ),
+		'warning' => __( 'Warning', 'shipping-destination-notices-for-woocommerce' ),
 	];
 }
 
@@ -113,6 +113,7 @@ function dcsn_is_wpml_active(): bool {
  * Return the current front-end language code (e.g. "fr", "en", "de").
  */
 function dcsn_current_language(): string {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
 	return (string) apply_filters( 'wpml_current_language', '' );
 }
 
@@ -120,6 +121,7 @@ function dcsn_current_language(): string {
  * Return the WPML default language code.
  */
 function dcsn_default_language(): string {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
 	return (string) apply_filters( 'wpml_default_language', '' );
 }
 
@@ -129,6 +131,7 @@ function dcsn_default_language(): string {
  * @return array<string, array>
  */
 function dcsn_get_active_languages(): array {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
 	$languages = apply_filters( 'wpml_active_languages', [] );
 	if ( ! is_array( $languages ) || count( $languages ) < 2 ) {
 		return [];
@@ -147,10 +150,11 @@ function dcsn_get_active_languages(): array {
  * @return string Translated string, or original if WPML is not active.
  */
 function dcsn_translate_string( string $name, string $original ): string {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
 	return (string) apply_filters(
 		'wpml_translate_single_string',
 		$original,
-		'dc-woo-shipping-notices',
+		'shipping-destination-notices-for-woocommerce',
 		$name
 	);
 }
