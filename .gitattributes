@@ -1,0 +1,10 @@
+# Exclude dev files from GitHub release archives (git archive / Download ZIP)
+.git                export-ignore
+.gitignore          export-ignore
+.gitattributes      export-ignore
+.distignore         export-ignore
+.cursor             export-ignore
+.vscode             export-ignore
+.wordpress-org      export-ignore
+.DS_Store           export-ignore
+*.log               export-ignore

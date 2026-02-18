@@ -196,7 +196,7 @@ class DCSN_Admin extends WC_Settings_Page {
 			'states'        => sanitize_text_field( wp_unslash( $_POST['states'] ?? '' ) ),
 			'mode'          => sanitize_text_field( wp_unslash( $_POST['mode'] ?? '' ) ),
 			'notice_type'   => sanitize_text_field( wp_unslash( $_POST['notice_type'] ?? 'warning' ) ),
-			'message'       => dcsn_sanitize_message( wp_unslash( $_POST['message'] ?? '' ) ),
+			'message'       => dcsn_sanitize_message( wp_kses_post( wp_unslash( $_POST['message'] ?? '' ) ) ),
 			'priority'      => absint( wp_unslash( $_POST['priority'] ?? DCSN_Rules::next_priority() ) ),
 			'stop_on_match' => ! empty( $_POST['stop_on_match'] ),
 		];

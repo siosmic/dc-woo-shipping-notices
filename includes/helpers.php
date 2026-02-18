@@ -150,9 +150,8 @@ function dcsn_get_active_languages(): array {
  * @return string Translated string, or original if WPML is not active.
  */
 function dcsn_translate_string( string $name, string $original ): string {
-	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
 	return (string) apply_filters(
-		'wpml_translate_single_string',
+		'wpml_translate_single_string', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
 		$original,
 		'shipping-destination-notices-for-woocommerce',
 		$name
