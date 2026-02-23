@@ -2,7 +2,7 @@
 /**
  * Shared helper functions.
  *
- * @package DC_Woo_Shipping_Notices
+ * @package DC_Shipping_Notices
  */
 
 declare(strict_types=1);
@@ -61,8 +61,8 @@ function dcsn_sanitize_states( $input ): array {
  */
 function dcsn_get_mode_labels(): array {
 	return [
-		'ALLOW_WITH_MESSAGE' => __( 'Allow with message', 'shipping-destination-notices-for-woocommerce' ),
-		'BLOCK_WITH_MESSAGE' => __( 'Block with message', 'shipping-destination-notices-for-woocommerce' ),
+		'ALLOW_WITH_MESSAGE' => __( 'Allow with message', 'dc-shipping-notices' ),
+		'BLOCK_WITH_MESSAGE' => __( 'Block with message', 'dc-shipping-notices' ),
 	];
 }
 
@@ -73,8 +73,8 @@ function dcsn_get_mode_labels(): array {
  */
 function dcsn_get_notice_type_labels(): array {
 	return [
-		'notice'  => __( 'Info', 'shipping-destination-notices-for-woocommerce' ),
-		'warning' => __( 'Warning', 'shipping-destination-notices-for-woocommerce' ),
+		'notice'  => __( 'Info', 'dc-shipping-notices' ),
+		'warning' => __( 'Warning', 'dc-shipping-notices' ),
 	];
 }
 
@@ -153,7 +153,7 @@ function dcsn_translate_string( string $name, string $original ): string {
 	return (string) apply_filters(
 		'wpml_translate_single_string', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
 		$original,
-		'shipping-destination-notices-for-woocommerce',
+		'dc-shipping-notices',
 		$name
 	);
 }
