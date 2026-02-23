@@ -1,4 +1,4 @@
-=== DC Shipping Notices for WooCommerce ===
+=== DC Shipping Destination Notices for WooCommerce ===
 Contributors: dcorradini
 Tags: woocommerce, shipping, checkout, notices
 Requires at least: 6.0
@@ -12,7 +12,7 @@ Allow store admins to show warnings or block shipping to specific countries or s
 
 == Description ==
 
-**DC Shipping Notices for WooCommerce** lets you create rules that display warning messages or completely block checkout based on the customer's shipping destination.
+**DC Shipping Destination Notices for WooCommerce** lets you create rules that display warning messages or completely block checkout based on the customer's shipping destination.
 
 = Features =
 
@@ -26,7 +26,7 @@ Allow store admins to show warnings or block shipping to specific countries or s
 
 == Installation ==
 
-1. Upload the `dc-shipping-notices` folder to `/wp-content/plugins/`.
+1. Upload the `dc-shipping-destination-notices` folder to `/wp-content/plugins/`.
 2. Activate the plugin through the **Plugins** menu in WordPress.
 3. Go to **WooCommerce > Settings > Shipping Notices** to create your first rule.
 

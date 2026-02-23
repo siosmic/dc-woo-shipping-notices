@@ -6,7 +6,7 @@
  * to detect country changes and display a modal when rules match.
  * Falls back to change events for classic (shortcode) checkout.
  *
- * @package DC_Shipping_Notices
+ * @package DC_Shipping_Destination_Notices
  */
 (function () {
 	'use strict';

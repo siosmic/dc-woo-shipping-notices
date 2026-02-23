@@ -4,7 +4,7 @@
  *
  * Supports both classic shortcode checkout and WooCommerce Block checkout.
  *
- * @package DC_Shipping_Notices
+ * @package DC_Shipping_Destination_Notices
  */
 
 declare(strict_types=1);

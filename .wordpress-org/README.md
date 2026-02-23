@@ -29,13 +29,13 @@ After wp.org approval, push to SVN:
 
 ```bash
 # Check out the SVN repo (URL provided by wp.org)
-svn co https://plugins.svn.wordpress.org/dc-shipping-notices/ svn-repo
+svn co https://plugins.svn.wordpress.org/dc-shipping-destination-notices/ svn-repo
 cd svn-repo
 
 # Copy plugin files to trunk
 rsync -av --exclude='.git' --exclude='.vscode' --exclude='.cursor' \
   --exclude='.wordpress-org' --exclude='.gitignore' --exclude='.DS_Store' \
-  /path/to/dc-shipping-notices/ trunk/
+  /path/to/dc-shipping-destination-notices/ trunk/
 
 # Copy assets
 cp /path/to/.wordpress-org/*.png assets/

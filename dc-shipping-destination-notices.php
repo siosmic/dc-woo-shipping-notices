@@ -1,20 +1,22 @@
 <?php
 /**
- * Plugin Name: DC Shipping Notices for WooCommerce
+ * Plugin Name: DC Shipping Destination Notices for WooCommerce
+ * Plugin URI:  https://unprinted.ch/shipping-destination-notices/
  * Description: Show custom messages or disable shipping based on destination country/state in WooCommerce checkout.
  * Version:     1.0.0
  * Author:      David Corradini
- * Text Domain: dc-shipping-notices
+ * Text Domain: dc-shipping-destination-notices
  * Domain Path: /languages
  * Requires PHP: 7.4
  * Requires at least: 6.0
  * Tested up to: 6.9
+ * Requires Plugins: woocommerce
  * WC requires at least: 8.0
  * WC tested up to: 9.6
  * License:     GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  *
- * @package DC_Shipping_Notices
+ * @package DC_Shipping_Destination_Notices
  */
 
 declare(strict_types=1);
@@ -85,7 +87,7 @@ add_action( 'plugins_loaded', 'dcsn_init' );
  * Register modal UI strings with WPML String Translation.
  *
  * This makes them available under WPML > String Translation
- * (domain "dc-shipping-notices") so the admin can provide
+ * (domain "dc-shipping-destination-notices") so the admin can provide
  * translations without .mo files.
  */
 function dcsn_register_wpml_strings(): void {
@@ -98,7 +100,7 @@ function dcsn_register_wpml_strings(): void {
 
 	foreach ( $strings as $name => $value ) {
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
-		do_action( 'wpml_register_single_string', 'dc-shipping-notices', $name, $value );
+		do_action( 'wpml_register_single_string', 'dc-shipping-destination-notices', $name, $value );
 	}
 }
 
@@ -134,7 +136,7 @@ function dcsn_maybe_migrate_settings(): void {
 function dcsn_missing_wc_notice(): void {
 	printf(
 		'<div class="notice notice-error"><p>%s</p></div>',
-		esc_html__( 'DC Shipping Notices requires WooCommerce to be installed and active.', 'dc-shipping-notices' )
+		esc_html__( 'DC Shipping Destination Notices requires WooCommerce to be installed and active.', 'dc-shipping-destination-notices' )
 	);
 }
 

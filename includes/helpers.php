@@ -2,7 +2,7 @@
 /**
  * Shared helper functions.
  *
- * @package DC_Shipping_Notices
+ * @package DC_Shipping_Destination_Notices
  */
 
 declare(strict_types=1);
@@ -61,8 +61,8 @@ function dcsn_sanitize_states( $input ): array {
  */
 function dcsn_get_mode_labels(): array {
 	return [
-		'ALLOW_WITH_MESSAGE' => __( 'Allow with message', 'dc-shipping-notices' ),
-		'BLOCK_WITH_MESSAGE' => __( 'Block with message', 'dc-shipping-notices' ),
+		'ALLOW_WITH_MESSAGE' => __( 'Allow with message', 'dc-shipping-destination-notices' ),
+		'BLOCK_WITH_MESSAGE' => __( 'Block with message', 'dc-shipping-destination-notices' ),
 	];
 }
 
@@ -73,8 +73,8 @@ function dcsn_get_mode_labels(): array {
  */
 function dcsn_get_notice_type_labels(): array {
 	return [
-		'notice'  => __( 'Info', 'dc-shipping-notices' ),
-		'warning' => __( 'Warning', 'dc-shipping-notices' ),
+		'notice'  => __( 'Info', 'dc-shipping-destination-notices' ),
+		'warning' => __( 'Warning', 'dc-shipping-destination-notices' ),
 	];
 }
 
@@ -153,7 +153,7 @@ function dcsn_translate_string( string $name, string $original ): string {
 	return (string) apply_filters(
 		'wpml_translate_single_string', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
 		$original,
-		'dc-shipping-notices',
+		'dc-shipping-destination-notices',
 		$name
 	);
 }

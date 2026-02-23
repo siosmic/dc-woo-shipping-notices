@@ -4,7 +4,7 @@
  *
  * Removes all plugin options and transients from the database.
  *
- * @package DC_Shipping_Notices
+ * @package DC_Shipping_Destination_Notices
  */
 
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {

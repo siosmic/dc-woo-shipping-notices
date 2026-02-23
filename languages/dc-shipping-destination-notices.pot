@@ -1,13 +1,13 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) 2026 David Corradini
-# This file is distributed under the same license as the DC Shipping Notices for WooCommerce package.
+# This file is distributed under the same license as the DC Shipping Destination Notices for WooCommerce package.
 # David Corradini <wp@unprinted.ch>, 2026.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: DC Shipping Notices for WooCommerce 1.0.0\n"
-"Report-Msgid-Bugs-To: https://github.com/dcorradini/dc-shipping-notices/"
+"Project-Id-Version: DC Shipping Destination Notices for WooCommerce 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/dcorradini/dc-shipping-destination-notices/"
 "issues\n"
 "POT-Creation-Date: 2026-02-17 10:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -18,9 +18,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: dc-shipping-notices.php:139
+#: dc-shipping-destination-notices.php:139
 msgid ""
-"DC Shipping Notices requires WooCommerce to be installed and active."
+"DC Shipping Destination Notices requires WooCommerce to be installed and active."
 msgstr ""
 
 #: includes/class-dcsn-admin.php:21
@@ -28,7 +28,7 @@ msgid "Shipping Notices"
 msgstr ""
 
 #: includes/class-dcsn-admin.php:43
-msgid "DC Shipping Notices"
+msgid "DC Shipping Destination Notices"
 msgstr ""
 
 #: includes/class-dcsn-admin.php:45

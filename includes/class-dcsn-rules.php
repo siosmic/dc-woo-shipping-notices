@@ -4,7 +4,7 @@
  *
  * All data stored in a single wp_option (DCSN_OPTION_KEY).
  *
- * @package DC_Shipping_Notices
+ * @package DC_Shipping_Destination_Notices
  */
 
 declare(strict_types=1);
@@ -179,19 +179,19 @@ final class DCSN_Rules {
 		$errors = [];
 
 		if ( empty( $rule['countries'] ) ) {
-			$errors[] = __( 'At least one country is required.', 'dc-shipping-notices' );
+			$errors[] = __( 'At least one country is required.', 'dc-shipping-destination-notices' );
 		}
 
 		if ( dcsn_message_is_empty( $rule['message'] ?? '' ) ) {
-			$errors[] = __( 'Message is required (at least one language).', 'dc-shipping-notices' );
+			$errors[] = __( 'Message is required (at least one language).', 'dc-shipping-destination-notices' );
 		}
 
 		if ( ! in_array( $rule['mode'] ?? '', [ 'ALLOW_WITH_MESSAGE', 'BLOCK_WITH_MESSAGE' ], true ) ) {
-			$errors[] = __( 'Invalid mode.', 'dc-shipping-notices' );
+			$errors[] = __( 'Invalid mode.', 'dc-shipping-destination-notices' );
 		}
 
 		if ( ! empty( $rule['states'] ) && ! in_array( 'US', $rule['countries'] ?? [], true ) ) {
-			$errors[] = __( 'US states can only be set if countries include US.', 'dc-shipping-notices' );
+			$errors[] = __( 'US states can only be set if countries include US.', 'dc-shipping-destination-notices' );
 		}
 
 		return $errors;
