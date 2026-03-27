@@ -71,7 +71,7 @@ class DCSN_Admin extends WC_Settings_Page {
 	/* ------------------------------------------------------------------ */
 
 	/**
-	 * Enqueue admin CSS only on our tab.
+	 * Enqueue admin assets only on our tab.
 	 */
 	public function enqueue_assets( string $hook ): void {
 		if ( $hook !== 'woocommerce_page_wc-settings' ) {
@@ -87,6 +87,14 @@ class DCSN_Admin extends WC_Settings_Page {
 			DCSN_PLUGIN_URL . 'assets/admin.css',
 			[],
 			DCSN_VERSION
+		);
+
+		wp_enqueue_script(
+			'dcsn-admin',
+			DCSN_PLUGIN_URL . 'assets/admin.js',
+			[],
+			DCSN_VERSION,
+			true
 		);
 	}
 
@@ -196,7 +204,7 @@ class DCSN_Admin extends WC_Settings_Page {
 			'states'        => sanitize_text_field( wp_unslash( $_POST['states'] ?? '' ) ),
 			'mode'          => sanitize_text_field( wp_unslash( $_POST['mode'] ?? '' ) ),
 			'notice_type'   => sanitize_text_field( wp_unslash( $_POST['notice_type'] ?? 'warning' ) ),
-			'message'       => dcsn_sanitize_message( wp_kses_post( wp_unslash( $_POST['message'] ?? '' ) ) ),
+			'message'       => dcsn_sanitize_message( wp_unslash( $_POST['message'] ?? '' ) ),
 			'priority'      => absint( wp_unslash( $_POST['priority'] ?? DCSN_Rules::next_priority() ) ),
 			'stop_on_match' => ! empty( $_POST['stop_on_match'] ),
 		];
@@ -480,27 +488,6 @@ class DCSN_Admin extends WC_Settings_Page {
 			<a href="<?php echo esc_url( $tab_url ); ?>" class="button"><?php esc_html_e( 'Cancel', 'dc-shipping-destination-notices' ); ?></a>
 		</p>
 
-		<!-- Inline JS for toggling states row and notice type row -->
-		<script>
-		(function(){
-			var countrySel = document.getElementById('dcsn-countries');
-			var statesRow  = document.getElementById('dcsn-states-row');
-			var modeSel    = document.getElementById('dcsn-mode');
-			var ntRow      = document.getElementById('dcsn-notice-type-row');
-
-			if (countrySel && statesRow) {
-				countrySel.addEventListener('change', function(){
-					var opts = Array.from(this.selectedOptions).map(function(o){ return o.value; });
-					statesRow.style.display = opts.indexOf('US') !== -1 ? '' : 'none';
-				});
-			}
-			if (modeSel && ntRow) {
-				modeSel.addEventListener('change', function(){
-					ntRow.style.display = this.value === 'BLOCK_WITH_MESSAGE' ? 'none' : '';
-				});
-			}
-		})();
-		</script>
 		<?php
 	}
 
