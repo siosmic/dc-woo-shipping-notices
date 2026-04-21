@@ -184,6 +184,7 @@ body.dcsn-modal-open {
 
 .dcsn-modal--block .dcsn-modal__btn--change:hover {
 	background: #b91c1c;
+	color: #fff;
 }
 
 /* ------------------------------------------------------------------ */

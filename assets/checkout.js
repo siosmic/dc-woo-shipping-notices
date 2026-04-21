@@ -2,9 +2,11 @@
  * DC Woo Shipping Notices — Checkout modal.
  *
  * Rules are embedded in the page by PHP (no AJAX needed).
- * Subscribes to the WooCommerce Block checkout data store (wc/store/cart)
- * to detect country changes and display a modal when rules match.
- * Falls back to change events for classic (shortcode) checkout.
+ * Detects country changes via multiple strategies:
+ *  1. wp.data store subscribe (Block checkout)
+ *  2. DOM change events + jQuery events (Classic checkout)
+ *  3. MutationObserver + polling (Block checkout fallback)
+ *  4. Intercepts Place Order button click for last-chance validation.
  *
  * @package DC_Shipping_Destination_Notices
  */
@@ -69,21 +71,122 @@
 	}
 
 	/* ================================================================ */
-	/*  Initialisation                                                   */
+	/*  Country selectors (Classic + Block checkout)                    */
+	/*                                                                  */
+	/*  Classic checkout uses underscores: billing_country              */
+	/*  Block checkout uses dashes:        billing-country              */
+	/*  We try both everywhere.                                          */
 	/* ================================================================ */
 
+	var SHIP_COUNTRY_SELECTORS = [
+		'select[name="shipping_country"]', '#shipping_country', // classic
+		'select[name="shipping-country"]', '#shipping-country', // block
+	];
+	var BILL_COUNTRY_SELECTORS = [
+		'select[name="billing_country"]',  '#billing_country',  // classic
+		'select[name="billing-country"]',  '#billing-country',  // block
+	];
+	var STATE_SELECTORS = [
+		'select[name="shipping_state"]', '#shipping_state',
+		'select[name="billing_state"]',  '#billing_state',
+		'select[name="shipping-state"]', '#shipping-state',
+		'select[name="billing-state"]',  '#billing-state',
+	];
+
 	function init() {
-		if (tryBlockCheckout()) {
-			interceptPlaceOrder();
-			return;
-		}
-		tryClassicCheckout();
+		// Sync initial prev* values from the current DOM state.
+		syncPrevFromDom();
+		// The modal is triggered ONLY when the user clicks "Commander".
 		interceptPlaceOrder();
+		// Inline WC notices are managed by JS after each checkout AJAX update.
+		setupInlineNotices();
+	}
+
+	/* ================================================================ */
+	/*  Inline WC notice management (classic checkout)                  */
+	/*                                                                  */
+	/*  Listens to WooCommerce's updated_checkout jQuery event and      */
+	/*  injects notice HTML directly into .woocommerce-notices-wrapper  */
+	/*  based on the current country, bypassing WC's session system.    */
+	/* ================================================================ */
+
+	function setupInlineNotices() {
+		if (typeof jQuery === 'undefined') return;
+
+		jQuery(document.body).on('updated_checkout', function () {
+			updateInlineNotice();
+		});
+
+		// Also run once at startup in case WC's first update fires before DOMContentLoaded.
+		updateInlineNotice();
 	}
 
 	/**
-	 * Block checkout: subscribe to wp.data store.
+	 * Read the current effective country directly from the DOM for inline notices.
+	 *
+	 * Does NOT use change-detection (prev* variables) — always returns the current
+	 * visible value. Checks billing and shipping and returns the one that matches
+	 * a rule (billing checked first since it's what the user fills out).
 	 */
+	function readCurrentCountryForNotice() {
+		var billEl  = findEl(BILL_COUNTRY_SELECTORS);
+		var shipEl  = findEl(SHIP_COUNTRY_SELECTORS);
+		var stateEl = findEl(STATE_SELECTORS);
+
+		var bill  = billEl  ? (billEl.value  || '').toUpperCase() : '';
+		var ship  = shipEl  ? (shipEl.value  || '').toUpperCase() : '';
+		var state = stateEl ? (stateEl.value || '')               : '';
+
+		// Prefer billing when it matches a rule (the user changes billing directly).
+		if (fallback && bill) {
+			var billResult = matchRules(bill, state);
+			if (billResult.matched.length > 0) {
+				return { country: bill, state: state, result: billResult };
+			}
+		}
+
+		// Fallback to shipping.
+		if (ship) {
+			var shipResult = matchRules(ship, state);
+			if (shipResult.matched.length > 0) {
+				return { country: ship, state: state, result: shipResult };
+			}
+		}
+
+		// No match — return current effective country and empty result.
+		var country = (fallback ? bill : '') || ship;
+		return { country: country, state: state, result: { matched: [], hasBlock: false } };
+	}
+
+	function updateInlineNotice() {
+		var wrapper = document.querySelector('.woocommerce-notices-wrapper');
+		if (!wrapper) return;
+
+		var detected = readCurrentCountryForNotice();
+
+		if (!detected.country || detected.result.matched.length === 0) {
+			wrapper.innerHTML = '';
+			return;
+		}
+
+		// Build WC-compatible notice HTML.
+		var html = '';
+		for (var i = 0; i < detected.result.matched.length; i++) {
+			var rule = detected.result.matched[i];
+			if (rule.mode === 'BLOCK_WITH_MESSAGE') {
+				html += '<ul class="woocommerce-error" role="alert"><li>' + rule.message + '</li></ul>';
+			} else {
+				html += '<ul class="woocommerce-info" role="alert"><li>' + rule.message + '</li></ul>';
+			}
+		}
+
+		wrapper.innerHTML = html;
+	}
+
+	/* ================================================================ */
+	/*  Block checkout: wp.data subscribe                               */
+	/* ================================================================ */
+
 	function tryBlockCheckout() {
 		if (typeof wp === 'undefined' || !wp.data || !wp.data.select || !wp.data.subscribe) {
 			return false;
@@ -96,10 +199,12 @@
 
 		var data = store.getCustomerData();
 		if (data) {
-			prevShippingCountry = (data.shippingAddress && data.shippingAddress.country) || '';
+			prevShippingCountry = ((data.shippingAddress && data.shippingAddress.country) || '').toUpperCase();
 			prevShippingState   = (data.shippingAddress && data.shippingAddress.state)   || '';
-			prevBillingCountry  = (data.billingAddress  && data.billingAddress.country)  || '';
+			prevBillingCountry  = ((data.billingAddress  && data.billingAddress.country)  || '').toUpperCase();
 			prevBillingState    = (data.billingAddress  && data.billingAddress.state)    || '';
+		} else {
+			syncPrevFromDom();
 		}
 
 		wp.data.subscribe(function () {
@@ -111,9 +216,9 @@
 			var d = s.getCustomerData();
 			if (!d) return;
 
-			var shipCountry = (d.shippingAddress && d.shippingAddress.country) || '';
+			var shipCountry = ((d.shippingAddress && d.shippingAddress.country) || '').toUpperCase();
 			var shipState   = (d.shippingAddress && d.shippingAddress.state)   || '';
-			var billCountry = (d.billingAddress  && d.billingAddress.country)  || '';
+			var billCountry = ((d.billingAddress  && d.billingAddress.country)  || '').toUpperCase();
 			var billState   = (d.billingAddress  && d.billingAddress.state)    || '';
 
 			var effectiveCountry = shipCountry || (fallback ? billCountry : '');
@@ -138,37 +243,177 @@
 		return true;
 	}
 
-	/**
-	 * Classic checkout: listen for country select changes.
-	 */
+	/* ================================================================ */
+	/*  Classic checkout: DOM change events                              */
+	/* ================================================================ */
+
 	function tryClassicCheckout() {
+		// Sync initial values once at startup only.
+		syncPrevFromDom();
+
+		// Native DOM change event.
 		document.addEventListener('change', function (e) {
+			handleClassicChange(e.target);
+		});
+
+		// jQuery events fired by WooCommerce / Select2 / SelectWoo.
+		// Only country_to_state_changed (genuine user change),
+		// NOT updated_checkout (AJAX fragment refresh).
+		if (typeof jQuery !== 'undefined') {
+			jQuery(document.body).on('country_to_state_changed', function () {
+				var ship = document.getElementById('shipping_country');
+				if (ship && ship.value) {
+					handleClassicChange(ship);
+				} else if (fallback) {
+					var bill = document.getElementById('billing_country');
+					if (bill) handleClassicChange(bill);
+				}
+			});
+		}
+	}
+
+	/**
+	 * Shared logic for classic change detection.
+	 * Compares el.value against stored previous country.
+	 * Triggers modal only when country actually changed.
+	 */
+	function handleClassicChange(el) {
+		if (modalOpen || !el) return;
+
+		// Accept both underscore (classic) and dash (block) ID/name formats.
+		var isShipping = (
+			el.id === 'shipping_country' || el.name === 'shipping_country' ||
+			el.id === 'shipping-country' || el.name === 'shipping-country'
+		);
+		var isBilling = (
+			el.id === 'billing_country'  || el.name === 'billing_country' ||
+			el.id === 'billing-country'  || el.name === 'billing-country'
+		);
+
+		if (!isShipping && !isBilling) return;
+
+		var country = (el.value || '').toUpperCase();
+		if (!country) return;
+
+		var stateEl = findEl(STATE_SELECTORS);
+		var state   = stateEl ? stateEl.value : '';
+
+		var prev = isShipping ? prevShippingCountry : prevBillingCountry;
+
+		if (country === prev) return; // No real change.
+
+		var result = matchRules(country, state);
+
+		if (result.matched.length > 0) {
+			showModal(result.matched, result.hasBlock);
+			// prev is NOT updated here — only updated when user clicks "Continue".
+		} else {
+			// No rule matched: silently accept this new country.
+			if (isShipping) {
+				prevShippingCountry = country;
+				prevShippingState   = state;
+			} else {
+				prevBillingCountry = country;
+				prevBillingState   = state;
+			}
+		}
+	}
+
+	/**
+	 * Sync prev* vars from the current DOM state.
+	 * Only called once at init — NEVER on AJAX events.
+	 */
+	function syncPrevFromDom() {
+		var shipC = findEl(SHIP_COUNTRY_SELECTORS);
+		var billC = findEl(BILL_COUNTRY_SELECTORS);
+		var stateEl = findEl(STATE_SELECTORS);
+
+		if (shipC) prevShippingCountry = (shipC.value || '').toUpperCase();
+		if (billC) prevBillingCountry  = (billC.value || '').toUpperCase();
+		if (stateEl) prevShippingState = stateEl.value;
+	}
+
+	/* ================================================================ */
+	/*  Block checkout: MutationObserver + polling fallback             */
+	/* ================================================================ */
+
+	/**
+	 * Watch Block checkout country selects via MutationObserver + interval.
+	 *
+	 * WooCommerce Block checkout renders React-controlled <select> elements
+	 * that may not fire standard DOM 'change' events. We observe the
+	 * checkout wrapper and poll every 600ms as a safety net.
+	 */
+	function observeBlockCheckoutFields() {
+		if (typeof MutationObserver === 'undefined') return;
+
+		function readBlockCountry() {
+			var shipEl = findEl(SHIP_COUNTRY_SELECTORS);
+			var billEl = findEl(BILL_COUNTRY_SELECTORS);
+			return {
+				ship: shipEl ? (shipEl.value || '').toUpperCase() : '',
+				bill: billEl ? (billEl.value || '').toUpperCase() : '',
+			};
+		}
+
+		function checkForCountryChange() {
 			if (modalOpen) return;
 
-			var el = e.target;
-			var isShippingCountry = (el.id === 'shipping_country' || el.name === 'shipping_country');
-			var isBillingCountry  = (el.id === 'billing_country'  || el.name === 'billing_country');
+			var cur = readBlockCountry();
 
-			if (!isShippingCountry && !isBillingCountry) return;
+			// Use the same change-detection as readCountryFromDom:
+			// pick whichever field actually changed from the last accepted value.
+			var shipChanged = cur.ship !== '' && cur.ship !== prevShippingCountry;
+			var billChanged = cur.bill !== '' && cur.bill !== prevBillingCountry;
 
-			var country = el.value || '';
-			var state   = '';
-
-			if (isShippingCountry) {
-				var ss = document.getElementById('shipping_state');
-				state = ss ? ss.value : '';
+			var effectiveCountry;
+			if (shipChanged) {
+				effectiveCountry = cur.ship;
+			} else if (billChanged && fallback) {
+				effectiveCountry = cur.bill;
 			} else {
-				var bs = document.getElementById('billing_state');
-				state = bs ? bs.value : '';
+				effectiveCountry = cur.ship || (fallback ? cur.bill : '');
 			}
 
-			if (country) {
-				var result = matchRules(country, state);
+			var prevEffective = prevShippingCountry || (fallback ? prevBillingCountry : '');
+
+			if (effectiveCountry && effectiveCountry !== prevEffective) {
+				var stateEl = findEl(STATE_SELECTORS);
+				var state   = stateEl ? stateEl.value : '';
+
+				var result = matchRules(effectiveCountry, state);
+
 				if (result.matched.length > 0) {
 					showModal(result.matched, result.hasBlock);
+				} else {
+					prevShippingCountry = cur.ship;
+					prevBillingCountry  = cur.bill;
 				}
 			}
+		}
+
+		var container = document.querySelector('.wp-block-woocommerce-checkout, .woocommerce-checkout, form.checkout, #wc-block-checkout__main');
+		var target    = container || document.body;
+
+		var observer = new MutationObserver(function () {
+			checkForCountryChange();
 		});
+
+		observer.observe(target, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
+
+		// Polling fallback: React updates .value directly without triggering MutationObserver.
+		var lastPollShipping = '';
+		var lastPollBilling  = '';
+
+		setInterval(function () {
+			if (modalOpen) return;
+			var cur = readBlockCountry();
+			if (cur.ship !== lastPollShipping || cur.bill !== lastPollBilling) {
+				lastPollShipping = cur.ship;
+				lastPollBilling  = cur.bill;
+				checkForCountryChange();
+			}
+		}, 600);
 	}
 
 	/* ================================================================ */
@@ -192,36 +437,27 @@
 				return;
 			}
 
-			var country = '';
-			var state   = '';
+			// Read country directly from the DOM first — the most reliable source
+			// since it always reflects what the user currently sees in the form.
+			// The wp.data store can be stale (cached shipping address from previous session).
+			var domResult = readCountryFromDom();
+			var country   = domResult.country;
+			var state     = domResult.state;
 
-			if (typeof wp !== 'undefined' && wp.data && wp.data.select) {
+			// Fall back to wp.data store if DOM gave nothing.
+			if (!country && typeof wp !== 'undefined' && wp.data && wp.data.select) {
 				var s = wp.data.select('wc/store/cart');
 				if (s && s.getCustomerData) {
 					var d = s.getCustomerData();
 					if (d) {
-						country = (d.shippingAddress && d.shippingAddress.country) || '';
-						state   = (d.shippingAddress && d.shippingAddress.state)   || '';
-						if (!country && fallback) {
-							country = (d.billingAddress && d.billingAddress.country) || '';
-							state   = (d.billingAddress && d.billingAddress.state)   || '';
+						var shipC = ((d.shippingAddress && d.shippingAddress.country) || '').toUpperCase();
+						var billC = ((d.billingAddress  && d.billingAddress.country)  || '').toUpperCase();
+						country = shipC || (fallback ? billC : '');
+						if (shipC) {
+							state = (d.shippingAddress && d.shippingAddress.state) || '';
+						} else if (fallback && billC) {
+							state = (d.billingAddress && d.billingAddress.state) || '';
 						}
-					}
-				}
-			}
-
-			if (!country) {
-				var shipSel = document.getElementById('shipping_country');
-				if (shipSel && shipSel.value) {
-					country = shipSel.value;
-					var shipSt = document.getElementById('shipping_state');
-					state = shipSt ? shipSt.value : '';
-				} else {
-					var billSel = document.getElementById('billing_country');
-					if (billSel && billSel.value) {
-						country = billSel.value;
-						var billSt = document.getElementById('billing_state');
-						state = billSt ? billSt.value : '';
 					}
 				}
 			}
@@ -241,23 +477,87 @@
 		}, true);
 	}
 
+	/**
+	 * Read the current effective country from the DOM.
+	 *
+	 * Uses change-detection to pick the correct field:
+	 *  - If shipping changed from prev → use shipping.
+	 *  - Else if billing changed from prev AND fallback enabled → use billing.
+	 *  - Else → shipping if available, then billing fallback.
+	 *
+	 * This handles WooCommerce Block checkout where the user changes
+	 * billing_country but shipping_country retains its previous (stale) value.
+	 *
+	 * @returns {{ country: string, state: string }}
+	 */
+	function readCountryFromDom() {
+		var shipEl  = findEl(SHIP_COUNTRY_SELECTORS);
+		var billEl  = findEl(BILL_COUNTRY_SELECTORS);
+		var stateEl = findEl(STATE_SELECTORS);
+
+		var shipCountry = shipEl  ? (shipEl.value  || '').toUpperCase() : '';
+		var billCountry = billEl  ? (billEl.value  || '').toUpperCase() : '';
+		var state       = stateEl ? (stateEl.value || '')               : '';
+
+		var shipChanged = shipCountry !== '' && shipCountry !== prevShippingCountry;
+		var billChanged = billCountry !== '' && billCountry !== prevBillingCountry;
+
+		var country;
+		if (shipChanged) {
+			// Shipping was explicitly changed — use it.
+			country = shipCountry;
+		} else if (billChanged && fallback) {
+			// Only billing changed and fallback is enabled — use billing.
+			country = billCountry;
+		} else {
+			// No change detected — return current preferred value.
+			country = shipCountry || (fallback ? billCountry : '');
+		}
+
+		return { country: country, state: state };
+	}
+
+	/**
+	 * Return the first element matching any of the given CSS selectors that has a value.
+	 *
+	 * @param {string[]} selectors
+	 * @returns {Element|null}
+	 */
+	function findEl(selectors) {
+		for (var i = 0; i < selectors.length; i++) {
+			var el = document.querySelector(selectors[i]);
+			if (el && el.value) return el;
+		}
+		return null;
+	}
+
 	/* ================================================================ */
 	/*  Accept new country (update stored previous values)               */
 	/* ================================================================ */
 
 	function acceptNewCountry() {
+		// Block checkout: read from wp.data store.
 		if (typeof wp !== 'undefined' && wp.data && wp.data.select) {
 			var s = wp.data.select('wc/store/cart');
 			if (s && s.getCustomerData) {
 				var d = s.getCustomerData();
 				if (d) {
-					prevShippingCountry = (d.shippingAddress && d.shippingAddress.country) || '';
+					prevShippingCountry = ((d.shippingAddress && d.shippingAddress.country) || '').toUpperCase();
 					prevShippingState   = (d.shippingAddress && d.shippingAddress.state)   || '';
-					prevBillingCountry  = (d.billingAddress  && d.billingAddress.country)  || '';
+					prevBillingCountry  = ((d.billingAddress  && d.billingAddress.country)  || '').toUpperCase();
 					prevBillingState    = (d.billingAddress  && d.billingAddress.state)    || '';
+					return;
 				}
 			}
 		}
+
+		// Classic checkout: read from DOM.
+		var dom = readCountryFromDom();
+		prevShippingCountry = dom.country;
+		prevShippingState   = dom.state;
+
+		var billEl = findEl(['select[name="billing_country"]', '#billing_country']);
+		if (billEl) prevBillingCountry = (billEl.value || '').toUpperCase();
 	}
 
 	/* ================================================================ */
@@ -365,7 +665,46 @@
 			}
 			document.body.classList.remove('dcsn-modal-open');
 			modalOpen = false;
+			// No automatic re-check: modal is only triggered by Commander click.
 		}, 300);
+	}
+
+	/**
+	 * Re-evaluate the currently selected country against accepted prev*.
+	 * Triggers a new modal if the destination changed while a modal was open.
+	 */
+	function recheckCurrentCountry() {
+		var dom     = readCountryFromDom();
+		var country = dom.country;
+		var state   = dom.state;
+
+		// Supplement with wp.data if DOM gave nothing.
+		if (!country && typeof wp !== 'undefined' && wp.data && wp.data.select) {
+			var s = wp.data.select('wc/store/cart');
+			if (s && s.getCustomerData) {
+				var d = s.getCustomerData();
+				if (d) {
+					var shipC = ((d.shippingAddress && d.shippingAddress.country) || '').toUpperCase();
+					var billC = ((d.billingAddress  && d.billingAddress.country)  || '').toUpperCase();
+					country   = shipC || (fallback ? billC : '');
+					state     = shipC ? (d.shippingAddress.state || '') : (fallback && billC ? (d.billingAddress.state || '') : '');
+				}
+			}
+		}
+
+		if (!country) return;
+
+		var prevEffective = prevShippingCountry || (fallback ? prevBillingCountry : '');
+
+		if (country !== prevEffective) {
+			var result = matchRules(country, state);
+			if (result.matched.length > 0) {
+				showModal(result.matched, result.hasBlock);
+			} else {
+				prevShippingCountry = country;
+				prevShippingState   = state;
+			}
+		}
 	}
 
 	/* ================================================================ */
@@ -373,26 +712,36 @@
 	/* ================================================================ */
 
 	function resetCountry() {
+		// Always update the DOM first so readCountryFromDom() immediately sees
+		// the previous values on the next Commander click.
+		var ship = findEl(SHIP_COUNTRY_SELECTORS);
+		if (ship) {
+			ship.value = prevShippingCountry;
+		}
+		var bill = findEl(BILL_COUNTRY_SELECTORS);
+		if (bill) {
+			bill.value = prevBillingCountry;
+		}
+
+		// Also update the WooCommerce Block store if available.
 		if (typeof wp !== 'undefined' && wp.data && wp.data.dispatch) {
 			var d = wp.data.dispatch('wc/store/cart');
 			if (d && d.setShippingAddress) {
 				d.setShippingAddress({ country: prevShippingCountry, state: prevShippingState });
 			}
-			if (d && d.setBillingAddress && fallback) {
+			if (d && d.setBillingAddress) {
 				d.setBillingAddress({ country: prevBillingCountry, state: prevBillingState });
 			}
-			return;
 		}
 
-		var ship = document.getElementById('shipping_country');
+		// Trigger WooCommerce native events so the form UI updates (states list, totals).
 		if (ship) {
-			ship.value = prevShippingCountry;
-			ship.dispatchEvent(new Event('change', { bubbles: true }));
+			if (typeof jQuery !== 'undefined') jQuery(ship).trigger('change');
+			else ship.dispatchEvent(new Event('change', { bubbles: true }));
 		}
-		var bill = document.getElementById('billing_country');
-		if (bill && fallback) {
-			bill.value = prevBillingCountry;
-			bill.dispatchEvent(new Event('change', { bubbles: true }));
+		if (bill) {
+			if (typeof jQuery !== 'undefined') jQuery(bill).trigger('change');
+			else bill.dispatchEvent(new Event('change', { bubbles: true }));
 		}
 	}
 

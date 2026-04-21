@@ -22,9 +22,24 @@ final class DCSN_Checkout {
 	 */
 	private static array $shown = [];
 
+	/**
+	 * Notices HTML generated during on_order_review_update().
+	 * Injected as a DOM fragment so WC JS replaces .woocommerce-notices-wrapper
+	 * reliably on every country change, regardless of WC version.
+	 *
+	 * @var string
+	 */
+	private static string $pending_notice_html = '';
+
 	public function __construct() {
-		/* ---- Classic checkout hooks ---- */
-		add_action( 'woocommerce_before_checkout_form', [ $this, 'display_notices' ], 5 );
+		/*
+		 * Classic checkout hooks.
+		 * NOTE: woocommerce_before_checkout_form is intentionally NOT registered here.
+		 * The initial notice is handled by the first woocommerce_checkout_update_order_review
+		 * AJAX call that WooCommerce fires on page load. Registering both hooks would render
+		 * the same notice twice: once inline (not inside .woocommerce-notices-wrapper) and
+		 * once via the AJAX fragment, which cannot be de-duplicated by JS.
+		 */
 		add_action( 'woocommerce_checkout_update_order_review', [ $this, 'on_order_review_update' ] );
 		add_action( 'woocommerce_after_checkout_validation', [ $this, 'validate_checkout' ], 10, 2 );
 
@@ -37,6 +52,19 @@ final class DCSN_Checkout {
 
 		/* ---- Modal: enqueue frontend assets ---- */
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_checkout_assets' ] );
+	}
+
+	/**
+	 * Detect whether the checkout page uses the WooCommerce Block checkout.
+	 * When true, we skip classic PHP notice hooks to avoid duplicates —
+	 * the modal JS handles informational messages instead.
+	 */
+	private function is_block_checkout_page(): bool {
+		if ( ! is_checkout() ) {
+			return false;
+		}
+		$post = get_post();
+		return $post instanceof \WP_Post && has_block( 'woocommerce/checkout', $post );
 	}
 
 	/* ================================================================== */
@@ -157,8 +185,13 @@ final class DCSN_Checkout {
 
 	/**
 	 * Hook: woocommerce_before_checkout_form.
+	 * Skipped for Block checkout — the modal handles informational messages there.
 	 */
 	public function display_notices(): void {
+		if ( $this->is_block_checkout_page() ) {
+			return;
+		}
+
 		[ $country, $state ] = $this->get_destination();
 
 		if ( empty( $country ) ) {
@@ -174,37 +207,25 @@ final class DCSN_Checkout {
 
 	/* ================================================================== */
 	/*  Classic checkout: AJAX order review update                         */
-	/* ================================================================== */
-
-	/**
+	/* ===============================================================	/**
 	 * Hook: woocommerce_checkout_update_order_review.
+	 * Skipped for Block checkout — Block checkout uses the Store API.
+	 *
+	 * Clears WooCommerce's notice session so the `messages` field in the AJAX
+	 * response stays empty. Inline notices are rendered by checkout.js after the
+	 * `updated_checkout` event fires, ensuring a single source of truth.
 	 *
 	 * @param string $posted_data URL-encoded form data.
 	 */
 	public function on_order_review_update( string $posted_data ): void {
-		self::$shown = [];
-
-		parse_str( $posted_data, $fields );
-
-		$settings = DCSN_Rules::get_settings();
-
-		$country = sanitize_text_field( $fields['shipping_country'] ?? '' );
-		$state   = sanitize_text_field( $fields['shipping_state'] ?? '' );
-
-		if ( empty( $country ) && ( $settings['fallback_to_billing'] ?? true ) ) {
-			$country = sanitize_text_field( $fields['billing_country'] ?? '' );
-			$state   = sanitize_text_field( $fields['billing_state'] ?? '' );
-		}
-
-		if ( empty( $country ) ) {
+		if ( $this->is_block_checkout_page() ) {
 			return;
 		}
 
-		$matched = self::evaluate_rules( $country, $state );
-
-		foreach ( $matched as $rule ) {
-			$this->add_notice( $rule );
-		}
+		// Keep the WC notice session empty so nothing appears via `messages`.
+		// Our JS reads the current country after `updated_checkout` fires and
+		// injects the appropriate notice HTML directly into .woocommerce-notices-wrapper.
+		wc_clear_notices();
 	}
 
 	/* ================================================================== */

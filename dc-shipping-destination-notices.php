@@ -1,9 +1,10 @@
 <?php
+
 /**
  * Plugin Name: DC Shipping Destination Notices for WooCommerce
  * Plugin URI:  https://unprinted.ch/shipping-destination-notices/
  * Description: Show custom messages or disable shipping based on destination country/state in WooCommerce checkout.
- * Version:     1.0.0
+ * Version:     1.0.5
  * Author:      David Corradini
  * Text Domain: dc-shipping-destination-notices
  * Domain Path: /languages
@@ -21,23 +22,23 @@
 
 declare(strict_types=1);
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
 	exit;
 }
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
 /* ------------------------------------------------------------------ */
-define( 'DCSN_VERSION', '1.0.0' );
-define( 'DCSN_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'DCSN_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'DCSN_OPTION_KEY', 'dcsn_rules' );
+define('DCSN_VERSION', '1.0.0');
+define('DCSN_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('DCSN_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('DCSN_OPTION_KEY', 'dcsn_rules');
 
 /* ------------------------------------------------------------------ */
 /*  WooCommerce feature compatibility                                   */
 /* ------------------------------------------------------------------ */
-add_action( 'before_woocommerce_init', function (): void {
-	if ( class_exists( \Automattic\WooCommerce\Utilities\FeaturesUtil::class ) ) {
+add_action('before_woocommerce_init', function (): void {
+	if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
 		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
 			'custom_order_tables',
 			__FILE__,
@@ -49,7 +50,7 @@ add_action( 'before_woocommerce_init', function (): void {
 			true
 		);
 	}
-} );
+});
 
 /* ------------------------------------------------------------------ */
 /*  Includes                                                           */
@@ -64,9 +65,10 @@ require_once DCSN_PLUGIN_DIR . 'includes/class-dcsn-checkout.php';
 /**
  * Initialize the plugin after plugins are loaded (WC must be active).
  */
-function dcsn_init(): void {
-	if ( ! class_exists( 'WooCommerce' ) ) {
-		add_action( 'admin_notices', 'dcsn_missing_wc_notice' );
+function dcsn_init(): void
+{
+	if (! class_exists('WooCommerce')) {
+		add_action('admin_notices', 'dcsn_missing_wc_notice');
 		return;
 	}
 
@@ -74,14 +76,32 @@ function dcsn_init(): void {
 	dcsn_maybe_migrate_settings();
 
 	// Register the WooCommerce Settings tab (admin class loaded lazily).
-	add_filter( 'woocommerce_get_settings_pages', 'dcsn_register_settings_page' );
+	add_filter('woocommerce_get_settings_pages', 'dcsn_register_settings_page');
 
 	// Register translatable UI strings with WPML String Translation.
 	dcsn_register_wpml_strings();
 
 	new DCSN_Checkout();
 }
-add_action( 'plugins_loaded', 'dcsn_init' );
+add_action('plugins_loaded', 'dcsn_init');
+
+/**
+ * Add 'Settings' link to the plugin action links.
+ *
+ * @param array $links Existing action links.
+ * @return array
+ */
+function dcsn_add_settings_link(array $links): array
+{
+	$settings_link = sprintf(
+		'<a href="%s">%s</a>',
+		admin_url('admin.php?page=wc-settings&tab=shipping_notices'),
+		__('Settings', 'dc-shipping-destination-notices')
+	);
+	array_unshift($links, $settings_link);
+	return $links;
+}
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'dcsn_add_settings_link');
 
 /**
  * Register modal UI strings with WPML String Translation.
@@ -90,7 +110,8 @@ add_action( 'plugins_loaded', 'dcsn_init' );
  * (domain "dc-shipping-destination-notices") so the admin can provide
  * translations without .mo files.
  */
-function dcsn_register_wpml_strings(): void {
+function dcsn_register_wpml_strings(): void
+{
 	$strings = [
 		'Modal title - block'           => 'Livraison impossible',
 		'Modal title - allow'           => 'Information de livraison',
@@ -98,9 +119,9 @@ function dcsn_register_wpml_strings(): void {
 		'Modal button - change country' => 'Changer de pays',
 	];
 
-	foreach ( $strings as $name => $value ) {
+	foreach ($strings as $name => $value) {
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- WPML API hook.
-		do_action( 'wpml_register_single_string', 'dc-shipping-destination-notices', $name, $value );
+		do_action('wpml_register_single_string', 'dc-shipping-destination-notices', $name, $value);
 	}
 }
 
@@ -110,7 +131,8 @@ function dcsn_register_wpml_strings(): void {
  * @param array $settings Existing settings page instances.
  * @return array
  */
-function dcsn_register_settings_page( array $settings ): array {
+function dcsn_register_settings_page(array $settings): array
+{
 	require_once DCSN_PLUGIN_DIR . 'includes/class-dcsn-admin.php';
 	$settings[] = new DCSN_Admin();
 	return $settings;
@@ -120,36 +142,39 @@ function dcsn_register_settings_page( array $settings ): array {
  * One-time migration: move fallback_to_billing from the dcsn_rules option
  * to its own WooCommerce-managed option (dcsn_fallback_to_billing).
  */
-function dcsn_maybe_migrate_settings(): void {
-	if ( false !== get_option( 'dcsn_fallback_to_billing' ) ) {
+function dcsn_maybe_migrate_settings(): void
+{
+	if (false !== get_option('dcsn_fallback_to_billing')) {
 		return; // Already migrated or set.
 	}
 
-	$old = get_option( DCSN_OPTION_KEY, [] );
+	$old = get_option(DCSN_OPTION_KEY, []);
 	$val = $old['settings']['fallback_to_billing'] ?? true;
-	update_option( 'dcsn_fallback_to_billing', $val ? 'yes' : 'no' );
+	update_option('dcsn_fallback_to_billing', $val ? 'yes' : 'no');
 }
 
 /**
  * Admin notice when WooCommerce is not active.
  */
-function dcsn_missing_wc_notice(): void {
+function dcsn_missing_wc_notice(): void
+{
 	printf(
 		'<div class="notice notice-error"><p>%s</p></div>',
-		esc_html__( 'DC Shipping Destination Notices requires WooCommerce to be installed and active.', 'dc-shipping-destination-notices' )
+		esc_html__('DC Shipping Destination Notices requires WooCommerce to be installed and active.', 'dc-shipping-destination-notices')
 	);
 }
 
 /* ------------------------------------------------------------------ */
 /*  Activation — seed default rules                                    */
 /* ------------------------------------------------------------------ */
-register_activation_hook( __FILE__, 'dcsn_activate' );
+register_activation_hook(__FILE__, 'dcsn_activate');
 
-function dcsn_activate(): void {
-	$existing = get_option( DCSN_OPTION_KEY );
+function dcsn_activate(): void
+{
+	$existing = get_option(DCSN_OPTION_KEY);
 
 	// Only seed if the option doesn't exist yet.
-	if ( false !== $existing ) {
+	if (false !== $existing) {
 		return;
 	}
 
@@ -162,7 +187,7 @@ function dcsn_activate(): void {
 				'id'            => dcsn_generate_id(),
 				'enabled'       => true,
 				'label'         => 'Blocage RU / UA',
-				'countries'     => [ 'RU', 'UA' ],
+				'countries'     => ['RU', 'UA'],
 				'states'        => [],
 				'mode'          => 'BLOCK_WITH_MESSAGE',
 				'notice_type'   => 'warning',
@@ -174,7 +199,7 @@ function dcsn_activate(): void {
 				'id'            => dcsn_generate_id(),
 				'enabled'       => true,
 				'label'         => 'Avertissement US',
-				'countries'     => [ 'US' ],
+				'countries'     => ['US'],
 				'states'        => [],
 				'mode'          => 'ALLOW_WITH_MESSAGE',
 				'notice_type'   => 'warning',
@@ -185,5 +210,5 @@ function dcsn_activate(): void {
 		],
 	];
 
-	update_option( DCSN_OPTION_KEY, $defaults, false );
+	update_option(DCSN_OPTION_KEY, $defaults, false);
 }
